@@ -1,1 +1,14 @@
 
+### Research topic: Customer Purchases Behavior
+
+### Team members: Kaitlyn Hoyme and Christopher Moseley
+
+### Data:
+
+``` r
+#Data: description of your data set, first data cleaning steps, marginal summaries;
+```
+
+### Questions to be addressed:
+
+- How does gender affect customer purchasing history
