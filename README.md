@@ -25,7 +25,30 @@ This data was originally simulated in R and the dataset was obtained
 through Kaggle, the data mimics real scenarios.
 
 ``` r
+library(dplyr)
+library(ggplot2)
+
 #Data: description of your data set, first data cleaning steps, marginal summaries;
+
+url <- "https://raw.githubusercontent.com/khoy24/DS202FinalProject/main/customer_data.csv"
+data <- read.csv(url)
+ 
+any(is.na(data))
+```
+
+    ## [1] FALSE
+
+``` r
+# no missing entries
+
+duplicateRows <- data %>% filter(duplicated(.))
+print(nrow(duplicateRows))
+```
+
+    ## [1] 0
+
+``` r
+#no duplicate rows
 ```
 
 ### Questions to be addressed:
@@ -45,3 +68,4 @@ through Kaggle, the data mimics real scenarios.
 - How does promotion usage affect customer behavior?
 - How do various factors (age,gender,region,education level,income)
   affect customer satisfaction score?
+- How does gender affect customer purchasing history
