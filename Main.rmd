@@ -1,0 +1,4 @@
+Research topic (title);
+Team members;
+Data: description of your data set, first data cleaning steps, marginal summaries;
+Questions to be addressed: Fleshed out project idea
