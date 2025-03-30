@@ -1,0 +1,31 @@
+---
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Research topic: Customer Purchases Behavior  
+
+### Team members: Kaitlyn Hoyme and Christopher Moseley  
+
+### Data:   
+
+
+```{r, message=FALSE, warning=FALSE}
+
+
+#Data: description of your data set, first data cleaning steps, marginal summaries;
+
+
+
+ 
+
+```
+
+  
+### Questions to be addressed: 
+
+- How does gender affect customer purchasing history
+  
