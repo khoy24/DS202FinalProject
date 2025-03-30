@@ -68,4 +68,3 @@ print(nrow(duplicateRows))
 - How does promotion usage affect customer behavior?
 - How do various factors (age,gender,region,education level,income)
   affect customer satisfaction score?
-- How does gender affect customer purchasing history
