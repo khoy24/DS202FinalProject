@@ -1,4 +1,23 @@
-Research topic (title);
-Team members;
-Data: description of your data set, first data cleaning steps, marginal summaries;
-Questions to be addressed: Fleshed out project idea
+
+### Research topic: Customer Purchases Behavior  
+
+### Team members: Kaitlyn Hoyme and Christopher Moseley  
+
+### Data:   
+
+
+```{r, message=FALSE, warning=FALSE}
+
+
+#Data: description of your data set, first data cleaning steps, marginal summaries;
+
+
+
+
+
+```
+
+  
+### Questions to be addressed: 
+
+- 
