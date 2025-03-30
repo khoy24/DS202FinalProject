@@ -5,10 +5,43 @@
 
 ### Data:
 
+This dataset includes information on customer purchasing behavior.  
+There are 100000 rows of 12 variables.  
+Variables are:  
+- age : age of customer  
+- gender : gender of customer  
+- income : income of customer  
+- education : education level of customer  
+- region : region of customers residence  
+- loyalty_status : loyalty status of customer  
+- purchasing_frequency : frequency of purchases by customer  
+- purchase_amount : amount spent by customer in each purchase  
+- product_category : category of purchased product  
+- promotion_usage : 0 means the customer did not use promotional offers,
+1 means the customer did use promotional offers  
+- satisfaction_score : satisfaction score of customer
+
+This data was originally simulated in R and the dataset was obtained
+through Kaggle, the data mimics real scenarios.
+
 ``` r
 #Data: description of your data set, first data cleaning steps, marginal summaries;
 ```
 
 ### Questions to be addressed:
 
-- How does gender affect customer purchasing history
+- How does gender affect customer purchasing behavior?
+- How does region affect customer purchasing behavior?
+- How does education level affect customer purchasing behavior?
+- How does income affect customer purchasing behavior?
+- How does age affect customer purchasing behavior?
+- What category of products are more popular among various age groups,
+  genders, and regions?
+- How does loyalty status of the customer affect purchasing behavior?
+- How do various factors (age,gender,region,education level,income)
+  affect whether or not a customer has a loyalty status?
+- What is the relationship between purchase frequency and purchase
+  amount?
+- How does promotion usage affect customer behavior?
+- How do various factors (age,gender,region,education level,income)
+  affect customer satisfaction score?
