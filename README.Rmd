@@ -30,6 +30,27 @@ duplicateRows <- data %>% filter(duplicated(.))
 print(nrow(duplicateRows))
 #no duplicate rows
 
+
+
+calculate_summary <- function(column) {
+  c(
+    mean = mean(column, na.rm = TRUE),
+    median = median(column, na.rm = TRUE),
+    sd = sd(column, na.rm = TRUE),
+    min = min(column, na.rm = TRUE),
+    max = max(column, na.rm = TRUE),
+    range = diff(range(column, na.rm = TRUE))  # Range is the difference between max and min
+  )
+}
+
+summary_stats <- data.frame(
+  age = calculate_summary(data$age),
+  income = calculate_summary(data$income),
+  purchase_amount = calculate_summary(data$purchase_amount)
+)
+
+print(summary_stats)
+
 ```
 
   
