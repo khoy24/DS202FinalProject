@@ -13,11 +13,12 @@
 
 
 
-
+ 
 
 ```
 
   
 ### Questions to be addressed: 
 
-- 
+- How does gender affect customer purchasing history
+  
