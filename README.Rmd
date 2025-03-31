@@ -33,7 +33,7 @@ This dataset includes information on customer purchasing behavior.
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
 library(ggplot2)
-
+View(data)
 #Data: description of your data set, first data cleaning steps, marginal summaries;
 
 url <- "https://raw.githubusercontent.com/khoy24/DS202FinalProject/main/customer_data.csv"
@@ -66,6 +66,8 @@ summary_stats <- data.frame(
 )
 
 print(summary_stats)
+
+
 
 ```
 
