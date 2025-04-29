@@ -3,6 +3,10 @@
 
 ### Team members: Kaitlyn Hoyme and Christopher Moseley
 
+### Introduction:  
+
+This report will demonstrate various relationships between variables surrounding customer purchasing behavior. We will examine these variables in order to determine how they affect customer purchasing behavior. This data would be of interest to businesses, as they can adjust these factors to improve profit and customer satisfaction.   
+
 ### Data:
 
 This dataset includes information on customer purchasing behavior.  
