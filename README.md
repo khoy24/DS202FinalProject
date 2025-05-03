@@ -1,46 +1,75 @@
 
-### Research topic: Customer Purchases Behavior
+### Research topic: Hotel Booking Data
 
 ### Team members: Kaitlyn Hoyme and Christopher Moseley
 
-### Introduction:  
+### Introduction:
 
-This report will demonstrate various relationships between variables surrounding customer purchasing behavior. We will examine these variables in order to determine how they affect customer purchasing behavior. This data would be of interest to businesses, as they can adjust these factors to improve profit and customer satisfaction.   
+This report will demonstrate various relationships between variables
+surrounding hotel booking data. We will examine these variables in order
+to determine how they affect hotel bookings. This data would be of
+interest to businesses like hotels, as they can adjust these factors to
+improve profit and customer satisfaction.
 
 ### Data:
 
-This dataset includes information on customer purchasing behavior.  
-There are 100000 rows of 12 variables.  
+This dataset includes information on hotel booking data from two hotels
+between the 1st of July 2015 and 31st of August 2017.  
+There are 119390 rows of 36 variables.  
 Variables are:  
-- age : age of customer  
-- gender : gender of customer  
-- income : income of customer  
-- education : education level of customer  
-- region : region of customers residence  
-- loyalty_status : loyalty status of customer  
-- purchasing_frequency : frequency of purchases by customer  
-- purchase_amount : amount spent by customer in each purchase  
-- product_category : category of purchased product  
-- promotion_usage : 0 means the customer did not use promotional offers,
-1 means the customer did use promotional offers  
-- satisfaction_score : satisfaction score of customer
+- variablename : variabledescription
 
-This data was originally simulated in R and the dataset was obtained
-through Kaggle, the data mimics real scenarios.
+This dataset was found through Kaggle, the data is real. The data is
+originally from “Hotel Booking Demand Datasets”, an article written by
+Nuno Antonio, Ana Almeida, and Luis Nunes for Data in Brief, Volume 22,
+February 2019.
 
 ``` r
 library(dplyr)
 library(ggplot2)
-
 #Data: description of your data set, first data cleaning steps, marginal summaries;
 
-url <- "https://raw.githubusercontent.com/khoy24/DS202FinalProject/main/customer_data.csv"
+url <- "https://raw.githubusercontent.com/khoy24/DS202FinalProject/main/hotel_booking.csv"
 data <- read.csv(url)
- 
+colnames(data)
+```
+
+    ##  [1] "hotel"                          "is_canceled"                   
+    ##  [3] "lead_time"                      "arrival_date_year"             
+    ##  [5] "arrival_date_month"             "arrival_date_week_number"      
+    ##  [7] "arrival_date_day_of_month"      "stays_in_weekend_nights"       
+    ##  [9] "stays_in_week_nights"           "adults"                        
+    ## [11] "children"                       "babies"                        
+    ## [13] "meal"                           "country"                       
+    ## [15] "market_segment"                 "distribution_channel"          
+    ## [17] "is_repeated_guest"              "previous_cancellations"        
+    ## [19] "previous_bookings_not_canceled" "reserved_room_type"            
+    ## [21] "assigned_room_type"             "booking_changes"               
+    ## [23] "deposit_type"                   "agent"                         
+    ## [25] "company"                        "days_in_waiting_list"          
+    ## [27] "customer_type"                  "adr"                           
+    ## [29] "required_car_parking_spaces"    "total_of_special_requests"     
+    ## [31] "reservation_status"             "reservation_status_date"       
+    ## [33] "name"                           "email"                         
+    ## [35] "phone.number"                   "credit_card"
+
+``` r
+nrow(data) # 119390 rows/entries
+```
+
+    ## [1] 119390
+
+``` r
+ncol(data) # 36 variables
+```
+
+    ## [1] 36
+
+``` r
 any(is.na(data))
 ```
 
-    ## [1] FALSE
+    ## [1] TRUE
 
 ``` r
 # no missing entries
@@ -67,37 +96,101 @@ calculate_summary <- function(column) {
   )
 }
 
-summary_stats <- data.frame(
-  age = calculate_summary(data$age),
-  income = calculate_summary(data$income),
-  purchase_amount = calculate_summary(data$purchase_amount)
-)
+#will have to redo this for new dataset
 
-print(summary_stats)
+#summary_stats <- data.frame(
+#  age = calculate_summary(data$age),
+#  income = calculate_summary(data$income),
+#  purchase_amount = calculate_summary(data$purchase_amount)
+#)
+
+#print(summary_stats)
 ```
-
-    ##              age   income purchase_amount
-    ## mean   30.003260 27516.27        9634.791
-    ## median 30.000000 27584.50        9452.000
-    ## sd      4.480535 12996.78        4799.339
-    ## min    12.000000  5000.00        1118.000
-    ## max    49.000000 50000.00       26204.000
-    ## range  37.000000 45000.00       25086.000
 
 ### Questions to be addressed:
 
-- How does gender affect customer purchasing behavior?
-- How does region affect customer purchasing behavior?
-- How does education level affect customer purchasing behavior?
-- How does income affect customer purchasing behavior?
-- How does age affect customer purchasing behavior?
-- What category of products are more popular among various age groups,
-  genders, and regions?
-- How does loyalty status of the customer affect purchasing behavior?
-- How do various factors (age,gender,region,education level,income)
-  affect whether or not a customer has a loyalty status?
-- What is the relationship between purchase frequency and purchase
-  amount?
-- How does promotion usage affect customer behavior?
-- How do various factors (age,gender,region,education level,income)
-  affect customer satisfaction score?
+- Question 1 ?  
+- Question 2 ? ..
+
+### Main - Curiosity
+
+Intense exploration and evidence of many trials and failures. Presents
+best ideas, rather than all ideas. Additional research from other
+sources used to help understand/explain findings.
+
+``` r
+#practice plots
+
+ggplot(data, aes(x = hotel, fill = factor(is_canceled))) +
+  geom_bar(position = "fill") +
+  labs(title = "Proportion of Cancellations by Hotel Type",
+       x = "Hotel Type", y = "Proportion",
+       fill = "Cancellation") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+
+``` r
+ggplot(data, aes(x = adults + children + babies, fill = factor(is_canceled))) +
+  geom_bar(position = "fill") +
+  labs(title = "Booking Size vs Cancellations",
+       x = "Number of People (Adults + Children + Babies)", y = "Proportion",
+       fill = "Cancellation") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
+
+``` r
+ggplot(data, aes(x = is_repeated_guest, fill = factor(is_canceled))) +
+  geom_bar(position = "fill") +
+  labs(title = "Cancellation Rate Among Repeat Guests",
+       x = "Repeat Guest", y = "Proportion",
+       fill = "Cancellation") +
+  scale_y_continuous(labels = scales::percent) +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-3.png)<!-- -->
+
+``` r
+ggplot(data, aes(x = meal, y = adr, fill = meal)) +
+  geom_boxplot() +
+  labs(title = "Meal Type vs ADR",
+       x = "Meal Type", y = "ADR (Average Daily Rate)") +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-4.png)<!-- -->
+
+``` r
+ggplot(data, aes(x = lead_time, fill = factor(is_canceled))) +
+  geom_histogram(bins = 50, alpha = 0.7, position = "identity") +
+  labs(title = "Cancellation by Lead Time",
+       x = "Lead Time (days)", y = "Count",
+       fill = "Cancellation") +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-5.png)<!-- -->
+
+``` r
+max(data$adults)
+```
+
+    ## [1] 55
+
+``` r
+max(data$babies)
+```
+
+    ## [1] 10
+
+``` r
+max(data$children)
+```
+
+    ## [1] NA
