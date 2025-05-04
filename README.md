@@ -186,7 +186,8 @@ calculate_summary <- function(column) {
 - What makes guests more likely to book these hotels / cancel their
   bookings?  
 - How does the average daily rate affect bookings?  
-- How does number of guests affect hotel bookings?
+- How does number of guests affect hotel bookings?  
+- How does hotel type impact bookings?
 
 ### Main - Curiosity
 
