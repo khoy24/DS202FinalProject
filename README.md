@@ -285,4 +285,24 @@ ggplot(data, aes(x = arrival_date_year, fill=arrival_date_year)) +
 
 ``` r
 # As we can see, 2015 had little bookings, but we also only have data for half the year of 2015, and 8 months of 2017. 2016 was the only full year we had. Because of this maybe there is a better way to represent this, but it probably isn't as good as a representative of the data as the months. 
+
+#Might also want to separate hotel bookings per month and facet that by year, as we'd have more months for those included on the half years. 
+
+ggplot(data, aes(x = arrival_date_month, fill = arrival_date_month)) +
+  geom_bar(width = 0.8) + 
+  labs(title = "Hotel Bookings per Month (Faceted by Year)", 
+       x = "Month", y = "Number of Bookings") +
+  facet_wrap(~ arrival_date_year) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none"
+  )
+```
+
+![](README_files/figure-gfm/unnamed-chunk-2-3.png)<!-- -->
+
+``` r
+#Now we see that in 2015 the months with the most bookings were September-October, in 2016 it was October again, followed by the spring and summer months, and in 2017 it was May with the highest number of bookings, with its surrounding months following it. For the most part we still see that months with warmer weather have more bookings.  
 ```
