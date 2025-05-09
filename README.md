@@ -145,34 +145,18 @@ colnames(data)
     ## [35] "phone.number"                   "credit_card"
 
 ``` r
-nrow(data) # 119390 rows/entries
-```
+#nrow(data) # 119390 rows/entries
+#ncol(data) # 36 variables
 
-    ## [1] 119390
-
-``` r
-ncol(data) # 36 variables
-```
-
-    ## [1] 36
-
-``` r
-any(is.na(data))
-```
-
-    ## [1] TRUE
-
-``` r
-# no missing entries
+# any(is.na(data))
+# a few missing entries
+#colSums(is.na(data))
+#only missing columns were in agent and company which makes sense so we decided to leave that. There are also
+#4 NA values in the children column which we will leave. 
 
 duplicateRows <- data %>% filter(duplicated(.))
-print(nrow(duplicateRows))
-```
-
-    ## [1] 0
-
-``` r
-#no duplicate rows
+# print(nrow(duplicateRows))
+# no duplicate rows in this dataset
 
 #examine types of columns, make sure makes sense
 str(data)
@@ -216,6 +200,17 @@ str(data)
     ##  $ phone.number                  : chr  "669-792-1661" "858-637-6955" "652-885-2745" "364-656-8427" ...
     ##  $ credit_card                   : chr  "************4322" "************9157" "************3734" "************5677" ...
 
+``` r
+#Change variable types to be correct
+#Need to make year not be an int. Change that and the similar values to strings.
+data <- data %>%
+  mutate(
+    `arrival_date_year` = as.character(`arrival_date_year`),
+    `arrival_date_week_number` = as.character(`arrival_date_week_number`),
+    `arrival_date_day_of_month` = as.character(`arrival_date_day_of_month`),
+  )
+```
+
 ### Results
 
 ### Main - Curiosity
@@ -227,60 +222,35 @@ sources used to help understand/explain findings.
 How does the time of year affect hotel bookings?
 
 ``` r
-#This plot shows the number of hotel bookings per month (it shows the number of bookings made FOR that month, not what month the booking was made).
-
-#ended up having to make months a factor to reorder in order of correct months
+#Have to make months a factor to reorder in order of correct months
 data$arrival_date_month <- factor(data$arrival_date_month, levels = c("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"))
 
-ggplot(data, aes(x = arrival_date_month, fill=arrival_date_month)) +
-  geom_bar(width = 0.8) + 
-  labs(title = "Hotel Bookings per Month", x = "Month", y = "Number of Bookings") +
-  #can only have one theme() call in a ggplot otherwise it gets overwritten, so I combined the qualities into one
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-    plot.title = element_text(hjust = 0.5) #needed this to center the title 
-  )
-```
+# We also only have data for half the year of 2015, and 8 months of 2017. 2016 was the only full year we had. This is why we represent it by months, not years. 
 
-![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
+#We separate hotel bookings per month and facet that by year, as we'd have more months for those included on the half years. 
 
-``` r
-#As we can see, number of bookings are much higher in the summer months, and much lower in the winter months.
-
-
-#Now we check what year had more bookings made
-
-#After making the first graph realized we needed to make year not be an int. Change that and the similar values to strings.
-data <- data %>%
-  mutate(
-    `arrival_date_year` = as.character(`arrival_date_year`),
-    `arrival_date_week_number` = as.character(`arrival_date_week_number`),
-    `arrival_date_day_of_month` = as.character(`arrival_date_day_of_month`),
-  )
-
-
-ggplot(data, aes(x = arrival_date_year, fill=arrival_date_year)) +
-  geom_bar(width = 0.8) + 
-  labs(title = "Hotel Bookings by Year", x = "Year", y = "Number of Bookings") +
-  #can only have one theme() call in a ggplot otherwise it gets overwritten, so I combined the qualities into one
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
-    plot.title = element_text(hjust = 0.5) #needed this to center the title 
-  )
-```
-
-![](README_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
-
-``` r
-# As we can see, 2015 had little bookings, but we also only have data for half the year of 2015, and 8 months of 2017. 2016 was the only full year we had. Because of this maybe there is a better way to represent this, but it probably isn't as good as a representative of the data as the months. 
-
-#Might also want to separate hotel bookings per month and facet that by year, as we'd have more months for those included on the half years. 
+#color code the months by temperature 
+cold_to_warm_colors <- c(
+  "January" = "#4575b4",  
+  "February" = "#74add1",  
+  "March" = "#abd9e9",
+  "April" = "#e0f3f8",
+  "May" = "#fee090",
+  "June" = "#fdae61",
+  "July" = "#f46d43",     
+  "August" = "#d73027",   
+  "September" = "#fdae61",
+  "October" = "#fee090",
+  "November" = "#abd9e9",
+  "December" = "#74add1"
+)
 
 ggplot(data, aes(x = arrival_date_month, fill = arrival_date_month)) +
   geom_bar(width = 0.8) + 
   labs(title = "Hotel Bookings per Month (Faceted by Year)", 
        x = "Month", y = "Number of Bookings") +
   facet_wrap(~ arrival_date_year) +
+  scale_fill_manual(values = cold_to_warm_colors) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
@@ -289,8 +259,14 @@ ggplot(data, aes(x = arrival_date_month, fill = arrival_date_month)) +
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-2-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-2-1.png)<!-- -->
 
-``` r
-#Now we see that in 2015 the months with the most bookings were September-October, in 2016 it was October again, followed by the spring and summer months, and in 2017 it was May with the highest number of bookings, with its surrounding months following it. For the most part we still see that months with warmer weather have more bookings.  
-```
+This plot shows the number of hotel bookings per month (it shows the
+number of bookings made FOR that month, not what month the booking was
+made).
+
+Now we see that in 2015 the months with the most bookings were
+September-October, in 2016 it was October again, followed by the spring
+and summer months, and in 2017 it was May with the highest number of
+bookings, with its surrounding months following it. For the most part we
+still see that months with warmer weather have more bookings.
