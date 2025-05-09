@@ -270,3 +270,133 @@ September-October, in 2016 it was October again, followed by the spring
 and summer months, and in 2017 it was May with the highest number of
 bookings, with its surrounding months following it. For the most part we
 still see that months with warmer weather have more bookings.
+
+How does the average daily rate affect bookings?
+
+``` r
+# Load required libraries
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(scales)
+
+# Convert arrival_date_month to ordered factor for correct month sorting
+data$arrival_date_month <- factor(data$arrival_date_month, 
+                                   levels = c("January", "February", "March", "April", "May", "June", 
+                                              "July", "August", "September", "October", "November", "December"))
+
+# 1. ADR and Bookings by Month and Year
+monthly_adr <- data %>%
+  group_by(arrival_date_year, arrival_date_month) %>%
+  summarise(avg_adr = mean(adr, na.rm = TRUE),
+            total_bookings = n(),
+            cancellations = sum(is_canceled)) %>%
+  ungroup()
+
+# 3. ADR vs. Booking Frequency (binned)
+data %>%
+  filter(adr > 0 & adr < 500) %>%
+  mutate(adr_bin = cut(adr, breaks = seq(0, 500, by = 25))) %>%
+  group_by(adr_bin) %>%
+  summarise(bookings = n()) %>%
+  ggplot(aes(x = adr_bin, y = bookings)) +
+  geom_bar(stat = "identity", fill = "#1f77b4") +
+  labs(title = "Bookings by ADR Range", x = "ADR Bin", y = "Number of Bookings") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+``` r
+# 4. ADR by Month
+monthly_adr_data <- data %>%
+  group_by(arrival_date_month) %>%
+  summarise(avg_adr = mean(adr, na.rm = TRUE), bookings = n())
+
+ggplot(monthly_adr_data, aes(x = arrival_date_month, y = avg_adr, fill = arrival_date_month)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Average Daily Rate by Month", x = "Month", y = "Average Daily Rate") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_discrete(limits = levels(data$arrival_date_month))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+
+``` r
+# Calculate average bookings by month, considering different years
+monthly_bookings <- data %>%
+  group_by(arrival_date_month, arrival_date_year) %>%
+  summarise(monthly_bookings = n()) %>%
+  ungroup()
+
+# Calculate the average number of bookings for each month across all years
+monthly_avg_bookings <- monthly_bookings %>%
+  group_by(arrival_date_month) %>%
+  summarise(avg_bookings = mean(monthly_bookings, na.rm = TRUE)) %>%
+  arrange(factor(arrival_date_month, levels = c("January", "February", "March", "April", "May", "June", 
+                                                "July", "August", "September", "October", "November", "December")))
+
+ggplot(monthly_avg_bookings, aes(x = arrival_date_month, y = avg_bookings, fill = arrival_date_month)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Average Number of Bookings by Month", x = "Month", y = "Average Number of Bookings") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_x_discrete(limits = levels(data$arrival_date_month))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
+
+``` r
+# Monthly comparison: avg_adr and avg_bookings by month and year
+monthly_comparison <- data %>%
+  group_by(arrival_date_year, arrival_date_month) %>%
+  summarise(
+    avg_adr = mean(adr, na.rm = TRUE),
+    avg_bookings = n()
+  ) %>%
+  ungroup()
+
+# Normalize values per year
+monthly_comparison <- monthly_comparison %>%
+  group_by(arrival_date_year) %>%
+  mutate(
+    normalized_bookings = rescale(avg_bookings),
+    normalized_adr = rescale(avg_adr)
+  ) %>%
+  ungroup()
+
+# Reshape to long format and rename metrics for clarity
+monthly_comparison_long <- monthly_comparison %>%
+  pivot_longer(cols = c(normalized_bookings, normalized_adr),
+               names_to = "metric", values_to = "value") %>%
+  mutate(metric = recode(metric,
+                         normalized_bookings = "Bookings",
+                         normalized_adr = "ADR"))
+
+# Final faceted plot
+ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = metric)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  scale_fill_manual(values = c("Bookings" = "#1f77b4", "ADR" = "#ff7f0e")) +
+  labs(title = "Normalized Monthly Bookings and ADR by Year",
+       x = "Month", y = "Normalized Value", fill = "Metric") +
+  facet_wrap(~arrival_date_year) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-3-4.png)<!-- -->
+
+``` r
+ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = metric)) +
+  geom_bar(stat = "identity", position = "identity", alpha = 0.8) +
+  facet_wrap(~ arrival_date_year) +
+  scale_fill_manual(values = c("Bookings" = "#1f77b4", "ADR" = "#ff7f0e")) +
+  labs(
+    title = "Normalized Monthly Bookings and ADR by Year",
+    x = "Month", y = "Normalized Value", fill = "Metric"
+  ) +
+  scale_x_discrete(limits = levels(data$arrival_date_month)) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-3-5.png)<!-- -->
