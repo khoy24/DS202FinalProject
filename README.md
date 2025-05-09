@@ -219,7 +219,7 @@ Intense exploration and evidence of many trials and failures. Presents
 best ideas, rather than all ideas. Additional research from other
 sources used to help understand/explain findings.
 
-How does the time of year affect hotel bookings?
+### How does the time of year affect hotel bookings?
 
 ``` r
 #Have to make months a factor to reorder in order of correct months
@@ -230,7 +230,7 @@ data$arrival_date_month <- factor(data$arrival_date_month, levels = c("January",
 #We separate hotel bookings per month and facet that by year, as we'd have more months for those included on the half years. 
 
 #color code the months by temperature 
-cold_to_warm_colors <- c(
+monthcolors <- c(
   "January" = "#4575b4",  
   "February" = "#74add1",  
   "March" = "#abd9e9",
@@ -247,10 +247,10 @@ cold_to_warm_colors <- c(
 
 ggplot(data, aes(x = arrival_date_month, fill = arrival_date_month)) +
   geom_bar(width = 0.8) + 
-  labs(title = "Hotel Bookings per Month (Faceted by Year)", 
+  labs(title = "Hotel Bookings per Month", 
        x = "Month", y = "Number of Bookings") +
   facet_wrap(~ arrival_date_year) +
-  scale_fill_manual(values = cold_to_warm_colors) +
+  scale_fill_manual(values = monthcolors) +
   theme_minimal() +
   theme(
     axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
@@ -271,7 +271,28 @@ and summer months, and in 2017 it was May with the highest number of
 bookings, with its surrounding months following it. For the most part we
 still see that months with warmer weather have more bookings.
 
-How does the average daily rate affect bookings?
+Now we observe how how the month affects the bookings separately for the
+resort and city hotels.
+
+``` r
+ggplot(data, aes(x = arrival_date_month, fill = hotel)) +
+  geom_bar(position = "dodge") +
+  facet_wrap(~ arrival_date_year) +
+  labs(title = "Monthly Bookings: Resort vs City Hotel", x = "Month", y = "Bookings") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+
+As you can see, for the most part the two hotels follow relatively the
+same trend with the months with a few exceptions. We also notice that
+the city hotel has a lot more bookings in comparison to the resort
+hotel. The city hotel also has more variation in the number of bookings,
+while the resort hotels number of bookings seems more consisent.
+
+### How does the average daily rate affect bookings?
 
 ``` r
 # Load required libraries
@@ -305,7 +326,7 @@ data %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
 # 4. ADR by Month
@@ -320,7 +341,7 @@ ggplot(monthly_adr_data, aes(x = arrival_date_month, y = avg_adr, fill = arrival
   scale_x_discrete(limits = levels(data$arrival_date_month))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
 
 ``` r
 # Calculate average bookings by month, considering different years
@@ -343,7 +364,7 @@ ggplot(monthly_avg_bookings, aes(x = arrival_date_month, y = avg_bookings, fill 
   scale_x_discrete(limits = levels(data$arrival_date_month))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
 
 ``` r
 # Monthly comparison: avg_adr and avg_bookings by month and year
@@ -383,7 +404,7 @@ ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = me
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->
 
 ``` r
 ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = metric)) +
@@ -399,4 +420,4 @@ ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = me
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-3-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-4-5.png)<!-- -->
