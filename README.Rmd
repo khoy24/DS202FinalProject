@@ -176,8 +176,29 @@ ggplot(data, aes(x = arrival_date_month, fill = hotel)) +
 
 ```
   
-As you can see, for the most part the two hotels follow relatively the same trend with the months with a few exceptions. We also notice that the city hotel has a lot more bookings in comparison to the resort hotel. The city hotel also has more variation in the number of bookings, while the resort hotels number of bookings seems more consisent.  
+As you can see, for the most part the two hotels follow relatively the same trend with the months with a few exceptions. We also notice that the city hotel has a lot more bookings in comparison to the resort hotel. The city hotel also has more variation in the number of bookings, while the resort hotels number of bookings seems more consistent.  
 
+The following graph shows numbers of bookings by month and year in heatmap form.  
+```{r, message=FALSE, warning=FALSE}
+
+heatmap_data <- data %>%
+  group_by(arrival_date_year, arrival_date_month) %>%
+  summarise(bookings = n())
+
+ggplot(heatmap_data, aes(x = arrival_date_month, y = arrival_date_year, fill = bookings)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "#e0f3f8", high = "#d73027") +
+  labs(title = "Heatmap of Bookings by Month and Year",
+       x = "Month", y = "Year", fill = "Bookings") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+
+```
+  
+As you can see in this graph, we can see that the bookings in generally have been increasing slightly over the years, and that they are generally higher in the spring and the fall. 
+
+  
 ### How does the average daily rate affect bookings?
 ```{r, warning=FALSE, message=FALSE}
 # Load required libraries

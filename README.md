@@ -290,7 +290,31 @@ As you can see, for the most part the two hotels follow relatively the
 same trend with the months with a few exceptions. We also notice that
 the city hotel has a lot more bookings in comparison to the resort
 hotel. The city hotel also has more variation in the number of bookings,
-while the resort hotels number of bookings seems more consisent.
+while the resort hotels number of bookings seems more consistent.
+
+The following graph shows numbers of bookings by month and year in
+heatmap form.
+
+``` r
+heatmap_data <- data %>%
+  group_by(arrival_date_year, arrival_date_month) %>%
+  summarise(bookings = n())
+
+ggplot(heatmap_data, aes(x = arrival_date_month, y = arrival_date_year, fill = bookings)) +
+  geom_tile(color = "white") +
+  scale_fill_gradient(low = "#e0f3f8", high = "#d73027") +
+  labs(title = "Heatmap of Bookings by Month and Year",
+       x = "Month", y = "Year", fill = "Bookings") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+As you can see in this graph, we can see that the bookings in generally
+have been increasing slightly over the years, and that they are
+generally higher in the spring and the fall.
 
 ### How does the average daily rate affect bookings?
 
@@ -326,7 +350,7 @@ data %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
 # 4. ADR by Month
@@ -341,7 +365,7 @@ ggplot(monthly_adr_data, aes(x = arrival_date_month, y = avg_adr, fill = arrival
   scale_x_discrete(limits = levels(data$arrival_date_month))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
 
 ``` r
 # Calculate average bookings by month, considering different years
@@ -364,7 +388,7 @@ ggplot(monthly_avg_bookings, aes(x = arrival_date_month, y = avg_bookings, fill 
   scale_x_discrete(limits = levels(data$arrival_date_month))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->
 
 ``` r
 # Monthly comparison: avg_adr and avg_bookings by month and year
@@ -404,7 +428,7 @@ ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = me
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-4.png)<!-- -->
 
 ``` r
 ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = metric)) +
@@ -420,4 +444,4 @@ ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = me
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-4-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-5-5.png)<!-- -->
