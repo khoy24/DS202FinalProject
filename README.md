@@ -11,14 +11,26 @@ to determine how they affect each other and hotel bookings. This data
 would be of interest to businesses like hotels, as they can adjust these
 factors to improve their profit and customer satisfaction.
 
+### Questions we will address:
+
+- How does the time of year affect hotel bookings?  
+- What makes guests more likely to book these hotels / cancel their
+  bookings?  
+- How does the average daily rate affect bookings?  
+- How does number of guests affect hotel bookings?  
+- How does hotel type impact bookings?
+
+By investigating these questions we hope to demonstrate useful data
+about what factors affect hotel bookings.
+
 ### Data:
 
 This dataset includes information on hotel booking data from two hotels,
-one a city hotel, the other a resort hotel, between the 1st of July 2015
-and 31st of August 2017.
+one a city hotel, the other a resort hotel, with data collected between
+the 1st of July 2015 and 31st of August 2017.
 
 There are 119390 rows of 36 variables.  
-Variables are:  
+The Variables are:  
 - hotel : States what hotel the row represents data from. City Hotel or
 Resort Hotel.  
 - is_canceled : value that indicates if the booking was canceled (1) or
@@ -92,10 +104,16 @@ of the hotel.
 - credit_card : Credit Card Number of the guest (not real for
 anonymity).
 
-This dataset was found through Kaggle, the data is real. The data is
-originally from “Hotel Booking Demand Datasets”, an article written by
-Nuno Antonio, Ana Almeida, and Luis Nunes for Data in Brief, Volume 22,
-February 2019.
+This dataset was found through Kaggle and all of the data recorded is
+real. However, for reasons surrounding anonymity variables like name,
+email, phone-number, and credit card are all made up. The data was
+originally obtained from “Hotel Booking Demand Datasets”, an article
+written by Nuno Antonio, Ana Almeida, and Luis Nunes for Data in Brief,
+Volume 22, February 2019.  
+This is a link to our dataset on Kaggle:
+<https://www.kaggle.com/datasets/mojtaba142/hotel-booking/data>
+
+### Data Cleaning
 
 ``` r
 library(dplyr)
@@ -198,37 +216,7 @@ str(data)
     ##  $ phone.number                  : chr  "669-792-1661" "858-637-6955" "652-885-2745" "364-656-8427" ...
     ##  $ credit_card                   : chr  "************4322" "************9157" "************3734" "************5677" ...
 
-``` r
-calculate_summary <- function(column) {
-  c(
-    mean = mean(column, na.rm = TRUE),
-    median = median(column, na.rm = TRUE),
-    sd = sd(column, na.rm = TRUE),
-    min = min(column, na.rm = TRUE),
-    max = max(column, na.rm = TRUE),
-    range = diff(range(column, na.rm = TRUE))  # Range is the difference between max and min
-  )
-}
-
-#will have to redo this for new dataset
-
-#summary_stats <- data.frame(
-#  age = calculate_summary(data$age),
-#  income = calculate_summary(data$income),
-#  purchase_amount = calculate_summary(data$purchase_amount)
-#)
-
-#print(summary_stats)
-```
-
-### Questions to be addressed:
-
-- How does the time of year affect hotel bookings?  
-- What makes guests more likely to book these hotels / cancel their
-  bookings?  
-- How does the average daily rate affect bookings?  
-- How does number of guests affect hotel bookings?  
-- How does hotel type impact bookings?
+### Results
 
 ### Main - Curiosity
 
