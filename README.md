@@ -17,7 +17,8 @@ factors to improve their profit and customer satisfaction.
 - What makes guests more likely to cancel their bookings?  
 - How does the average daily rate affect bookings?  
 - How does number of guests affect hotel bookings?  
-- What affects how many times bookings are changed?
+- What affects how many times bookings are changed?  
+- Where are most visitors coming from?
 
 By investigating these questions we hope to demonstrate useful data
 about what factors affect hotel bookings.
@@ -208,6 +209,7 @@ data <- data %>%
     `arrival_date_year` = as.character(`arrival_date_year`),
     `arrival_date_week_number` = as.character(`arrival_date_week_number`),
     `arrival_date_day_of_month` = as.character(`arrival_date_day_of_month`),
+    `is_repeated_guest` = as.character(`is_repeated_guest`)
   )
 ```
 
@@ -485,13 +487,14 @@ data %>%
     cancel_rate = mean(is_canceled),
     .groups = "drop"
   ) %>%
+  mutate(customer_type = reorder(customer_type, cancel_rate)) %>%  # reorder levels
   ggplot(aes(x = customer_type, y = cancel_rate, fill = customer_type)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)), 
             vjust = -0.5, size = 4) +
   scale_y_continuous(labels = percent_format()) +
   labs(
-    title = "Cancellation Rate by Customer Type",
+    title = "Cancellation Rate by Customer Type (Ordered Low to High)",
     x = "Customer Type",
     y = "Cancellation Rate"
   ) +
@@ -814,8 +817,9 @@ data %>%
   theme_minimal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- --> This shows
-cancellation rate by number of changes.
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+This shows cancellation rate by number of changes.
 
 This shows booking changes by hotel type.
 
@@ -846,3 +850,147 @@ other than that they don’t seem to be very correlated.
 
 How does lead time correlate to booking changes? We hypothesize the
 longer lead time is the more booking changes will be made.
+
+``` r
+data %>%
+  mutate(lead_time_bin = cut(lead_time, breaks = 20)) %>%  # auto-binning into 20 ranges
+  group_by(lead_time_bin) %>%
+  summarise(avg_booking_changes = mean(booking_changes), .groups = 'drop') %>%
+  ggplot(aes(x = lead_time_bin, y = avg_booking_changes)) +
+  geom_bar(stat = "identity") +
+  labs(
+    title = "Average Booking Changes by Lead Time (Binned)",
+    x = "Lead Time (Binned)",
+    y = "Average Number of Booking Changes"
+  ) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+As shown in the graph there doesn’t seem to be too much change in
+booking changes with lead time. It stays less than .5 average booking
+changes until we get to the 700 to 738 day lead time range, then it
+significantly spikes and the average number of booking changes is 3.
+However, there are very few values in that range, so likely it was just
+one booking that was changed 3 times.
+
+The following graph demonstrates the relationship between whether a
+customer is a returning guest and the number of booking changes made.
+
+``` r
+  ggplot(data, aes(x = is_repeated_guest, y = booking_changes, fill = is_repeated_guest)) +
+  stat_summary(fun = mean, geom = "bar", width = 0.6) +
+  labs(
+    title = "Average Number of Booking Changes by Guest Type",
+    x = "Guest Type",
+    y = "Average Booking Changes"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+As shown in the graph we see that repeated guests have a slightly higher
+chance of changing their bookings. However, both have a small average
+number of booking changes with repeating guests being around 0.26
+changes made on average and new guests being around 0.22 changes made on
+average.
+
+The following graph shows customer type vs number of booking changes
+made.
+
+``` r
+# this reorders so that they go lowest to highest average num of booking changes
+data <- data %>%
+  group_by(customer_type) %>%
+  mutate(avg_changes = mean(booking_changes, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(customer_type = reorder(customer_type, avg_changes))
+
+
+ggplot(data, aes(x = customer_type, y = booking_changes, fill = customer_type)) +
+  stat_summary(fun = mean, geom = "bar", width = 0.6) +
+  labs(
+    title = "Average Number of Booking Changes by Customer Type",
+    x = "Customer Type",
+    y = "Average Booking Changes"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+This graph shows that transient-party customer types are more likely to
+make more booking changes than the others with an average number of
+booking changes of about 0.35, and contract customers make the least
+amount of booking changes with an average around 0.11.
+
+Now we investigate the relationship between deposit type and number of
+booking changes.
+
+``` r
+data %>%
+  group_by(deposit_type) %>%
+  summarise(
+    avg_booking_changes = mean(booking_changes, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(deposit_type = reorder(deposit_type, avg_booking_changes)) %>%
+  ggplot(aes(x = deposit_type, y = avg_booking_changes, fill = deposit_type)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(avg_booking_changes, 2)), 
+            vjust = -0.5, size = 4) +
+  labs(
+    title = "Average Number of Booking Changes by Deposit Type",
+    x = "Deposit Type",
+    y = "Average Booking Changes"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+As you can see, refundable deposit types have a higher average number of
+changes made to the bookings at 0.59 on average, wherease no deposit is
+next at 0.25, and non refund has a very low number of changes on average
+at 0.01.
+
+### Where are most visitors coming from?
+
+To answer this question we observe the country of origin of bookings
+made.
+
+``` r
+country_counts <- data %>%
+  group_by(country) %>%
+  summarise(count = n()) %>%
+  arrange(desc(count)) %>%
+  top_n(10, count)  # limit to top 10 countries or else the graph is too big 
+
+ggplot(country_counts, aes(x = reorder(country, -count), y = count, fill = country)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(
+    title = "Top Countries by Number of Hotel Bookings",
+    x = "Country",
+    y = "Number of Bookings"
+  ) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_viridis_d()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+This information would be useful for these hotels to know which
+countries to focus their advertising on. As shown in the graph, the top
+10 countries for number of bookings made is Portugal, the UK, France,
+Spain, Germany, Italy, Ireland, Belgium, Brazil, and the Netherlands.
+However, Portugal by FAR has the most bookings with almost 5,000, and
+the next largest is only around 1200 to 1300 bookings.
+
+### Conclusion
