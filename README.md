@@ -269,7 +269,8 @@ Now we see that in 2015 the months with the most bookings were
 September-October, in 2016 it was October again, followed by the spring
 and summer months, and in 2017 it was May with the highest number of
 bookings, with its surrounding months following it. For the most part we
-still see that months with warmer weather have more bookings.
+still see that months with warmer. more mild weather, like the spring
+and fall seasons have more bookings.
 
 Now we observe how how the month affects the bookings separately for the
 resort and city hotels.
@@ -316,6 +317,79 @@ As you can see in this graph, we can see that the bookings in generally
 have been increasing slightly over the years, and that they are
 generally higher in the spring and the fall.
 
+The following graph shows bookings cancelled vs bookings not cancelled
+by month and facetted by year.
+
+``` r
+# set up data to compare with cancelled or not
+cancellation_summary <- data %>%
+  group_by(arrival_date_year, arrival_date_month, is_canceled) %>%
+  summarise(bookings = n(), .groups = 'drop')
+
+# add key
+cancellation_summary$is_canceled <- factor(cancellation_summary$is_canceled,
+                                           labels = c("Not Canceled", "Canceled"))
+
+# Plot
+ggplot(cancellation_summary, aes(x = arrival_date_month, y = bookings, fill = is_canceled)) +
+  geom_bar(stat = "identity", position = "stack") +
+  facet_wrap(~ arrival_date_year) +
+  scale_fill_manual(values = c("Not Canceled" = "#1b9e77", "Canceled" = "#d95f02")) +
+  labs(title = "Hotel Booking Cancellations by Month and Year",
+       x = "Arrival Month", y = "Number of Bookings", fill = "Status") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        plot.title = element_text(hjust = 0.5))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+Looking at the chart the number of cancellations seems to follow the
+number of bookings. There doesn’t seem to be any super significant
+months or years where cancellations are more frequent in comparison to
+the number of bookings for that month.
+
+Now we want to observe if the month/year affects the duration of a
+guest’s stay.
+
+``` r
+#add variables for length of stay and total number of guests for later calculations
+data <- data %>%
+  mutate(
+    length_of_stay = stays_in_weekend_nights + stays_in_week_nights,
+  )
+
+
+avg_stay_per_booking <- data %>%
+  group_by(arrival_date_year, arrival_date_month) %>%
+  summarise(
+    avg_stay = mean(length_of_stay, na.rm = TRUE),
+    .groups = 'drop'
+  )
+
+
+ggplot(avg_stay_per_booking, aes(x = arrival_date_month, y = avg_stay, fill = arrival_date_month)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~arrival_date_year) +
+  labs(title = "Average Length of Stay per Booking",
+       x = "Month", y = "Average Length of Stay") +
+  scale_fill_manual(values = monthcolors) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5),
+    legend.position = "none"
+  )
+```
+
+![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+This graph shows the average length of stay for each booking. We
+calculate total nights stayed by adding weekend nights and week nights
+together. It demonstrates that the average length of stay for a booking
+is longer in summer months / hotter weather with it being around 3-4
+nights, with the colder months being more around 2-3 nights on average.
+
 ### How does the average daily rate affect bookings?
 
 ``` r
@@ -325,10 +399,6 @@ library(ggplot2)
 library(tidyr)
 library(scales)
 
-# Convert arrival_date_month to ordered factor for correct month sorting
-data$arrival_date_month <- factor(data$arrival_date_month, 
-                                   levels = c("January", "February", "March", "April", "May", "June", 
-                                              "July", "August", "September", "October", "November", "December"))
 
 # 1. ADR and Bookings by Month and Year
 monthly_adr <- data %>%
@@ -350,7 +420,7 @@ data %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 # 4. ADR by Month
@@ -365,7 +435,7 @@ ggplot(monthly_adr_data, aes(x = arrival_date_month, y = avg_adr, fill = arrival
   scale_x_discrete(limits = levels(data$arrival_date_month))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
 ``` r
 # Calculate average bookings by month, considering different years
@@ -388,7 +458,7 @@ ggplot(monthly_avg_bookings, aes(x = arrival_date_month, y = avg_bookings, fill 
   scale_x_discrete(limits = levels(data$arrival_date_month))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
 
 ``` r
 # Monthly comparison: avg_adr and avg_bookings by month and year
@@ -428,7 +498,7 @@ ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = me
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-4.png)<!-- -->
 
 ``` r
 ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = metric)) +
@@ -444,4 +514,4 @@ ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = me
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-5-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-5.png)<!-- -->
