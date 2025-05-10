@@ -409,7 +409,10 @@ ggplot(data, aes(x = lead_time, fill = factor(is_canceled))) +
   geom_histogram(position = "fill", bins = 50) +
   labs(title = "Cancellation Rate by Lead Time", x = "Lead Time (days)",
        y = "Proportion", fill = "Canceled") +
-  theme_minimal()
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
@@ -440,7 +443,10 @@ data %>%
     x = "Number of Previous Cancellations",
     y = "Cancellation Rate"
   ) +
-  theme_minimal()
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
@@ -468,7 +474,10 @@ data %>%
     y = "Cancellation Rate",
     fill = "Guest Type"
   ) +
-  theme_minimal()
+  theme_minimal()  + 
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
@@ -499,7 +508,9 @@ data %>%
     y = "Cancellation Rate"
   ) +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
@@ -532,7 +543,9 @@ data %>%
     y = "Cancellation Rate"
   ) +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
@@ -563,7 +576,9 @@ data %>%
     y = "Cancellation Rate"
   ) +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+    )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
@@ -593,7 +608,10 @@ data %>%
     x = "Number of Special Requests",
     y = "Cancellation Rate"
   ) +
-  theme_minimal()
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
@@ -784,7 +802,10 @@ data %>%
     x = "Number of Changes",
     y = "Number of Bookings"
   ) +
-  theme_minimal()
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
@@ -814,7 +835,10 @@ data %>%
     x = "Number of Changes",
     y = "Cancellation Rate"
   ) +
-  theme_minimal()
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
@@ -839,7 +863,10 @@ data %>%
     y = "Proportion of Bookings",
     fill = "Hotel Type"
   ) +
-  theme_minimal()
+  theme_minimal() + 
+  theme(
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
@@ -853,18 +880,20 @@ longer lead time is the more booking changes will be made.
 
 ``` r
 data %>%
-  mutate(lead_time_bin = cut(lead_time, breaks = 20)) %>%  # auto-binning into 20 ranges
+  mutate(lead_time_bin = cut(lead_time, breaks = 20)) %>%  # bin
   group_by(lead_time_bin) %>%
   summarise(avg_booking_changes = mean(booking_changes), .groups = 'drop') %>%
   ggplot(aes(x = lead_time_bin, y = avg_booking_changes)) +
   geom_bar(stat = "identity") +
   labs(
-    title = "Average Booking Changes by Lead Time (Binned)",
-    x = "Lead Time (Binned)",
+    title = "Average Booking Changes by Lead Time",
+    x = "Lead Time",
     y = "Average Number of Booking Changes"
   ) +
   theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
@@ -888,7 +917,9 @@ customer is a returning guest and the number of booking changes made.
     y = "Average Booking Changes"
   ) +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
@@ -919,7 +950,9 @@ ggplot(data, aes(x = customer_type, y = booking_changes, fill = customer_type)) 
     y = "Average Booking Changes"
   ) +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
@@ -950,7 +983,9 @@ data %>%
     y = "Average Booking Changes"
   ) +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
@@ -980,8 +1015,9 @@ ggplot(country_counts, aes(x = reorder(country, -count), y = count, fill = count
     x = "Country",
     y = "Number of Bookings"
   ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_fill_viridis_d()
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+    plot.title = element_text(hjust = 0.5)
+  )
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
