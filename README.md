@@ -471,20 +471,7 @@ monthly_comparison_long <- monthly_comparison %>%
                          normalized_bookings = "Bookings",
                          normalized_adr = "ADR"))
 
-# Final faceted plot
-ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = metric)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
-  scale_fill_manual(values = c("Bookings" = "#1f77b4", "ADR" = "#ff7f0e")) +
-  labs(title = "Normalized Monthly Bookings and ADR by Year",
-       x = "Month", y = "Normalized Value", fill = "Metric") +
-  facet_wrap(~arrival_date_year) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
 
-![](README_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
-
-``` r
 cleaned_data <- data %>%
   filter(!is.na(adr), !is.na(lead_time), adr <= 1000)
 
@@ -496,26 +483,7 @@ ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
   theme_minimal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
-
-``` r
-cleaned_data <- data %>%
-  filter(!is.na(adr), !is.na(is_canceled), adr <= 1000)
-
-# Convert is_canceled to a factor for labeling
-cleaned_data$is_canceled <- factor(cleaned_data$is_canceled, labels = c("Not Canceled", "Canceled"))
-
-# Create boxplot
-ggplot(cleaned_data, aes(x = is_canceled, y = adr, fill = is_canceled)) +
-  geom_boxplot(alpha = 0.7, outlier.alpha = 0.2) +
-  labs(title = "ADR Distribution by Cancellation Status",
-       x = "Booking Status",
-       y = "Average Daily Rate (ADR)") +
-  theme_minimal() +
-  theme(legend.position = "none")
-```
-
-![](README_files/figure-gfm/unnamed-chunk-7-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
 
 ``` r
 # Create labeled datasets
@@ -544,6 +512,50 @@ ggplot(combined_monthly_data, aes(x = arrival_date_month, y = value, fill = metr
   labs(title = "Monthly Comparison of Average Bookings and ADR",
        x = "Month", y = "Value") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+![](README_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
+
+``` r
+#data <- data %>%
+ # mutate(total_guests = adults + children + babies)
+
+filtered_data <- data %>%
+  mutate(total_guests = adults + children + babies) %>%
+  filter(adr <= 1000, total_guests > 0, total_guests < 20)
+
+
+ggplot(filtered_data, aes(x = total_guests, y = adr)) +
+  geom_jitter(alpha = 0.4, color = "#2c7fb8") +
+  geom_smooth(method = "lm", se = FALSE, color = "darkorange") +
+  labs(title = "ADR vs. Number of Guests",
+       x = "Total Number of Guests",
+       y = "Average Daily Rate (ADR)") +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-7-4.png)<!-- -->
+
+``` r
+# Create a new column indicating presence of an agent
+data <- data %>%
+  mutate(has_agent = ifelse(is.na(agent), "No Agent", "Has Agent"))
+
+# Filter for ADR values below 1000
+filtered_data <- data %>%
+  filter(adr < 1000)
+
+# Box plot of ADR by agent status
+ggplot(filtered_data, aes(x = has_agent, y = adr, fill = has_agent)) +
+  geom_boxplot(outlier.alpha = 0.2) +
+  labs(
+    title = "ADR Comparison (ADR < 1000): Bookings With vs Without Agent",
+    x = "Agent Status",
+    y = "Average Daily Rate (ADR)"
+  ) +
+  scale_fill_manual(values = c("Has Agent" = "#1f77b4", "No Agent" = "#ff7f0e")) +
+  theme_minimal() +
+  theme(legend.position = "none")
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-7-5.png)<!-- -->
