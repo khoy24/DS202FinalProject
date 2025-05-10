@@ -21,7 +21,7 @@ This report will demonstrate various relationships between variables surrounding
 - What makes guests more likely to cancel their bookings?  
 - How does the average daily rate affect bookings?  
 - How does number of guests affect hotel bookings?  
-- How does hotel type impact bookings?  
+- What affects how many times bookings are changed?  
   
 By investigating these questions we hope to demonstrate useful data about what factors affect hotel bookings.    
   
@@ -612,6 +612,96 @@ ggplot(filtered_data, aes(x = has_agent, y = adr, fill = has_agent)) +
   scale_fill_manual(values = c("Has Agent" = "#1f77b4", "No Agent" = "#ff7f0e")) +
   theme_minimal() +
   theme(legend.position = "none")
+
+
+
+```
+  
+  
+### What affects how many times bookings are changed?  
+
+```{r, message=FALSE, warning=FALSE}
+
+data %>%
+  count(booking_changes) %>%
+  filter(n > 50) %>%  # Filter out rare counts for clarity
+  ggplot(aes(x = as.factor(booking_changes), y = n)) +
+  geom_bar(stat = "identity", fill = "#3182bd") +
+  labs(
+    title = "Distribution of Booking Changes",
+    x = "Number of Changes",
+    y = "Number of Bookings"
+  ) +
+  theme_minimal()
+
+
+```
+  
+This chart shows the distribution of how many booking changes are made. As you can see, the majority of bookings don't have any changes made to them, and it drops from there.  
+
+
+This is the cancellation rate by number of bookings.  
+
+```{r, message=FALSE, warning=FALSE}
+
+
+data %>%
+  group_by(booking_changes) %>%
+  summarise(
+    total = n(),
+    cancel_rate = mean(is_canceled),
+    .groups = "drop"
+  ) %>%
+  filter(total > 50) %>%
+  ggplot(aes(x = as.factor(booking_changes), y = cancel_rate)) +
+  geom_bar(stat = "identity", fill = "#de2d26") +
+  geom_text(aes(label = scales::percent(cancel_rate, accuracy = 0.1)), 
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "Cancellation Rate by Number of Booking Changes",
+    x = "Number of Changes",
+    y = "Cancellation Rate"
+  ) +
+  theme_minimal()
+
+
+
+
+
+
+```
+This shows cancellation rate by number of changes.  
+
+
+This shows booking changes by hotel type.  
+```{r, message=FALSE, warning=FALSE}
+
+data %>%
+  group_by(hotel, booking_changes) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  group_by(hotel) %>%
+  mutate(proportion = n / sum(n)) %>%
+  filter(n > 50) %>%  # Optional: filter out rare booking change values
+  ggplot(aes(x = as.factor(booking_changes), y = proportion, fill = hotel)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Proportion of Booking Changes by Hotel Type",
+    x = "Number of Booking Changes",
+    y = "Proportion of Bookings",
+    fill = "Hotel Type"
+  ) +
+  theme_minimal()
+
+
+```
+  
+As we can see the hotel type doesn't seem to affect the number of booking changes very much. There is no significant data to be shown other than that they don't seem to be very correlated.  
+
+How does lead time correlate to booking changes? We hypothesize the longer lead time is the more booking changes will be made.   
+```{r, message=FALSE, warning=FALSE}
+
 
 
 
