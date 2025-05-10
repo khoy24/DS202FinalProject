@@ -18,7 +18,7 @@ This report will demonstrate various relationships between variables surrounding
 ### Questions we will address: 
 
 - How does the time of year affect hotel bookings?  
-- What makes guests more likely to book these hotels / cancel their bookings?  
+- What makes guests more likely to cancel their bookings?  
 - How does the average daily rate affect bookings?  
 - How does number of guests affect hotel bookings?  
 - How does hotel type impact bookings?  
@@ -76,6 +76,7 @@ This is a link to our dataset on Kaggle: https://www.kaggle.com/datasets/mojtaba
 ```{r, message=FALSE, warning=FALSE}
 library(dplyr)
 library(ggplot2)
+library(scales)
 #Data: description of your data set, first data cleaning steps, marginal summaries;
 
 url <- "https://raw.githubusercontent.com/khoy24/DS202FinalProject/main/hotel_booking.csv"
@@ -214,7 +215,6 @@ cancellation_summary$is_canceled <- factor(cancellation_summary$is_canceled,
 ggplot(cancellation_summary, aes(x = arrival_date_month, y = bookings, fill = is_canceled)) +
   geom_bar(stat = "identity", position = "stack") +
   facet_wrap(~ arrival_date_year) +
-  scale_fill_manual(values = c("Not Canceled" = "#1b9e77", "Canceled" = "#d95f02")) +
   labs(title = "Hotel Booking Cancellations by Month and Year",
        x = "Arrival Month", y = "Number of Bookings", fill = "Status") +
   theme_minimal() +
@@ -261,6 +261,199 @@ ggplot(avg_stay_per_booking, aes(x = arrival_date_month, y = avg_stay, fill = ar
 ```
   
 This graph shows the average length of stay for each booking. We calculate total nights stayed by adding weekend nights and week nights together. It demonstrates that the average length of stay for a booking is longer in summer months / hotter weather with it being around 3-4 nights, with the colder months being more around 2-3 nights on average.  
+
+### What makes guests more likely to cancel their bookings?  
+
+We will examine the following variables for how they affect cancellations:  
+- lead_time  
+- previous_cancellations  
+- customer_type  
+- market_segment  
+- hotel  
+- special_requests  
+  
+The following graph shows cancellation by lead time.  
+```{r, message=FALSE, warning=FALSE}
+
+ggplot(data, aes(x = lead_time, fill = factor(is_canceled))) +
+  geom_histogram(position = "fill", bins = 50) +
+  labs(title = "Cancellation Rate by Lead Time", x = "Lead Time (days)",
+       y = "Proportion", fill = "Canceled") +
+  theme_minimal()
+
+```
+  
+Apart from the two outliers on the far right of the graph that did not cancel their bookings, the trend seems to be that the longer the lead time the higher the chance of cancellation.  
+
+The following graph demonstrates how previous_cancellations affects the chance of cancelling again.  
+```{r, message=FALSE, warning=FALSE}
+
+data %>%
+  group_by(previous_cancellations) %>%
+  summarise(
+    count = n(),
+    cancel_rate = mean(is_canceled),
+    .groups = "drop"
+  ) %>%
+  filter(count > 20) %>%  # ignore values with less data entries
+  ggplot(aes(x = as.factor(previous_cancellations), y = cancel_rate)) +
+  geom_bar(stat = "identity", fill = "#0073C2FF") +
+  geom_text(aes(label = scales::percent(cancel_rate, accuracy = 0.1)), 
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  labs(
+    title = "Cancellation Rate by Number of Previous Cancellations",
+    x = "Number of Previous Cancellations",
+    y = "Cancellation Rate"
+  ) +
+  theme_minimal()
+
+data %>%
+  mutate(
+    repeated_guest = ifelse(is_repeated_guest == 1, "Repeated Guest", "New Guest")
+  ) %>%
+  group_by(previous_cancellations, repeated_guest) %>%
+  summarise(
+    count = n(),
+    cancel_rate = mean(is_canceled),
+    .groups = "drop"
+  ) %>%
+  filter(count > 10) %>%  # Filter out small groups for clarity
+  ggplot(aes(x = as.factor(previous_cancellations), y = cancel_rate, fill = repeated_guest)) +
+  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.6) +
+  geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)),
+            position = position_dodge(width = 0.7), vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Cancellation Rate by Previous Cancellations and Guest Type",
+    x = "Number of Previous Cancellations",
+    y = "Cancellation Rate",
+    fill = "Guest Type"
+  ) +
+  theme_minimal()
+
+
+```
+  
+For example, 94.4% of customers that have previously cancelled once will cancel again on another booking. This graph shows that the rate of cancellation is generally lower for guests that have previously stayed there and didn't cancel at least once.  
+The graph shows the relationships from customer type to cancellations.  
+```{r, message=FALSE, warning=FALSE}
+
+
+data %>%
+  group_by(customer_type) %>%
+  summarise(
+    total_bookings = n(),
+    cancel_rate = mean(is_canceled),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(x = customer_type, y = cancel_rate, fill = customer_type)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)), 
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Cancellation Rate by Customer Type",
+    x = "Customer Type",
+    y = "Cancellation Rate"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+
+
+```
+  
+This graph demonstrates the cancellation rates for various customer types. As we can see, transient customers have the highest cancellation rates with 40.7% cancellation rate. Group customers have the lowest with a 10.2% cancellation rate.   
+
+
+This graph demonstrates the relationship between market segments and cancellation rates. 
+```{r, message=FALSE, warning=FALSE}
+
+data %>%
+  filter(market_segment != "Undefined") %>%
+  group_by(market_segment) %>%
+  summarise(
+    total_bookings = n(),
+    cancel_rate = mean(is_canceled),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(x = reorder(market_segment, -cancel_rate), y = cancel_rate, fill = market_segment)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)),
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Cancellation Rate by Market Segment",
+    x = "Market Segment",
+    y = "Cancellation Rate"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+```
+  
+This graph shows the cancellation rate by market segment. As you can see, the Groups category for market segment has the highest cancellation rate with 61.1%, and complementary has the lowest with 13.1%.  
+
+  
+This next graph shows the cancellation rates in the different hotels (resort vs city).  
+```{r, message=FALSE, warning=FALSE}
+
+data %>%
+  group_by(hotel) %>%
+  summarise(
+    total_bookings = n(),
+    cancel_rate = mean(is_canceled),
+    .groups = "drop"
+  ) %>%
+  ggplot(aes(x = hotel, y = cancel_rate, fill = hotel)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)),
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Cancellation Rate by Hotel Type",
+    x = "Hotel Type",
+    y = "Cancellation Rate"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+```
+  
+As shown in the graph, the city hotel has a higher cancellation rate of about 41.7% whereas the resort hotel had 27.8% cancellation rate.  
+
+This graph shows how the number of special requests correlates with the cancellation rate.  
+```{r, message=FALSE, warning=FALSE}
+
+data %>%
+  group_by(total_of_special_requests) %>%
+  summarise(
+    count = n(),
+    cancel_rate = mean(is_canceled),
+    .groups = "drop"
+  ) %>%
+  filter(count > 30) %>%  # Optional: remove rare categories for clarity
+  ggplot(aes(x = as.factor(total_of_special_requests), y = cancel_rate)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)), 
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = percent_format()) +
+  labs(
+    title = "Cancellation Rate by Number of Special Requests",
+    x = "Number of Special Requests",
+    y = "Cancellation Rate"
+  ) +
+  theme_minimal()
+
+
+```
+  
+This graph shows that as the number of special requests made gets higher, the rate of cancellation becomes lower.  
+
+
   
 ### How does the average daily rate affect bookings?
 ```{r, warning=FALSE, message=FALSE}
