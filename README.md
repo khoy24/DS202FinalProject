@@ -399,6 +399,10 @@ library(ggplot2)
 library(tidyr)
 library(scales)
 
+# Convert arrival_date_month to ordered factor for correct month sorting
+data$arrival_date_month <- factor(data$arrival_date_month, 
+                                   levels = c("January", "February", "March", "April", "May", "June", 
+                                              "July", "August", "September", "October", "November", "December"))
 
 # 1. ADR and Bookings by Month and Year
 monthly_adr <- data %>%
@@ -428,16 +432,6 @@ monthly_adr_data <- data %>%
   group_by(arrival_date_month) %>%
   summarise(avg_adr = mean(adr, na.rm = TRUE), bookings = n())
 
-ggplot(monthly_adr_data, aes(x = arrival_date_month, y = avg_adr, fill = arrival_date_month)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Average Daily Rate by Month", x = "Month", y = "Average Daily Rate") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_x_discrete(limits = levels(data$arrival_date_month))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
-
-``` r
 # Calculate average bookings by month, considering different years
 monthly_bookings <- data %>%
   group_by(arrival_date_month, arrival_date_year) %>%
@@ -451,16 +445,6 @@ monthly_avg_bookings <- monthly_bookings %>%
   arrange(factor(arrival_date_month, levels = c("January", "February", "March", "April", "May", "June", 
                                                 "July", "August", "September", "October", "November", "December")))
 
-ggplot(monthly_avg_bookings, aes(x = arrival_date_month, y = avg_bookings, fill = arrival_date_month)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Average Number of Bookings by Month", x = "Month", y = "Average Number of Bookings") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_x_discrete(limits = levels(data$arrival_date_month))
-```
-
-![](README_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
-
-``` r
 # Monthly comparison: avg_adr and avg_bookings by month and year
 monthly_comparison <- data %>%
   group_by(arrival_date_year, arrival_date_month) %>%
@@ -498,19 +482,67 @@ ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = me
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
+![](README_files/figure-gfm/unnamed-chunk-7-2.png)<!-- -->
+
+``` r
+cleaned_data <- data %>%
+  filter(!is.na(adr), !is.na(lead_time), adr <= 1000)
+
+ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
+  geom_point(alpha = 0.5) +  # Scatter plot with transparency for better visibility
+  labs(title = "Relationship Between Lead Time and Average Daily Rate (ADR)",
+       x = "Lead Time (Days)",
+       y = "Average Daily Rate (ADR)") +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-7-3.png)<!-- -->
+
+``` r
+cleaned_data <- data %>%
+  filter(!is.na(adr), !is.na(is_canceled), adr <= 1000)
+
+# Convert is_canceled to a factor for labeling
+cleaned_data$is_canceled <- factor(cleaned_data$is_canceled, labels = c("Not Canceled", "Canceled"))
+
+# Create boxplot
+ggplot(cleaned_data, aes(x = is_canceled, y = adr, fill = is_canceled)) +
+  geom_boxplot(alpha = 0.7, outlier.alpha = 0.2) +
+  labs(title = "ADR Distribution by Cancellation Status",
+       x = "Booking Status",
+       y = "Average Daily Rate (ADR)") +
+  theme_minimal() +
+  theme(legend.position = "none")
+```
+
 ![](README_files/figure-gfm/unnamed-chunk-7-4.png)<!-- -->
 
 ``` r
-ggplot(monthly_comparison_long, aes(x = arrival_date_month, y = value, fill = metric)) +
-  geom_bar(stat = "identity", position = "identity", alpha = 0.8) +
-  facet_wrap(~ arrival_date_year) +
-  scale_fill_manual(values = c("Bookings" = "#1f77b4", "ADR" = "#ff7f0e")) +
-  labs(
-    title = "Normalized Monthly Bookings and ADR by Year",
-    x = "Month", y = "Normalized Value", fill = "Metric"
-  ) +
-  scale_x_discrete(limits = levels(data$arrival_date_month)) +
-  theme_minimal() +
+# Create labeled datasets
+monthly_avg_bookings$metric <- "Average Bookings"
+monthly_avg_bookings$value <- monthly_avg_bookings$avg_bookings
+
+monthly_adr_data$metric <- "Average ADR"
+monthly_adr_data$value <- monthly_adr_data$avg_adr
+
+# Combine into one data frame
+combined_monthly_data <- rbind(
+  monthly_avg_bookings[, c("arrival_date_month", "metric", "value")],
+  monthly_adr_data[, c("arrival_date_month", "metric", "value")]
+)
+
+# Set month order
+combined_monthly_data$arrival_date_month <- factor(
+  combined_monthly_data$arrival_date_month,
+  levels = levels(data$arrival_date_month)
+)
+
+ggplot(combined_monthly_data, aes(x = arrival_date_month, y = value, fill = metric)) +
+  geom_bar(stat = "identity", show.legend = FALSE) +
+  scale_fill_manual(values = c("Average Bookings" = "#1f77b4", "Average ADR" = "#ff7f0e")) +
+  facet_wrap(~metric, scales = "free_y") +  # Side-by-side
+  labs(title = "Monthly Comparison of Average Bookings and ADR",
+       x = "Month", y = "Value") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
