@@ -434,7 +434,7 @@ data %>%
   ) %>%
   filter(count > 20) %>%  # ignore values with less data entries
   ggplot(aes(x = as.factor(previous_cancellations), y = cancel_rate)) +
-  geom_bar(stat = "identity", fill = "#0073C2FF") +
+  geom_bar(stat = "identity") +
   geom_text(aes(label = scales::percent(cancel_rate, accuracy = 0.1)), 
             vjust = -0.5, size = 4) +
   scale_y_continuous(labels = scales::percent_format()) +
@@ -451,41 +451,40 @@ data %>%
 
 ![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
+For example, 94.4% of customers that have previously cancelled once will
+cancel again on another booking. This graph shows that the rate of
+cancellation is generally lower for guests that have previously stayed
+there and didn’t cancel at least once.
+
+Here we examine whether the fact that a guest is a returning guest or
+not affects the cancellation rate.
+
 ``` r
-data %>%
-  mutate(
-    repeated_guest = ifelse(is_repeated_guest == 1, "Repeated Guest", "New Guest")
-  ) %>%
-  group_by(previous_cancellations, repeated_guest) %>%
-  summarise(
-    count = n(),
-    cancel_rate = mean(is_canceled),
-    .groups = "drop"
-  ) %>%
-  filter(count > 10) %>%  # Filter out small groups for clarity
-  ggplot(aes(x = as.factor(previous_cancellations), y = cancel_rate, fill = repeated_guest)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.6) +
-  geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)),
-            position = position_dodge(width = 0.7), vjust = -0.5, size = 4) +
-  scale_y_continuous(labels = percent_format()) +
+ggplot(data, aes(x = factor(is_repeated_guest), y = is_canceled, fill = is_repeated_guest)) +
+  stat_summary(fun = mean, geom = "bar", width = 0.6) +
+  scale_x_discrete(labels = c("New Guest", "Returning Guest")) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(
-    title = "Cancellation Rate by Previous Cancellations and Guest Type",
-    x = "Number of Previous Cancellations",
-    y = "Cancellation Rate",
-    fill = "Guest Type"
+    title = "Cancellation Rate by Returning Guest Status",
+    x = "Guest Type",
+    y = "Cancellation Rate"
   ) +
-  theme_minimal()  + 
+  theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5)
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
-For example, 94.4% of customers that have previously cancelled once will
-cancel again on another booking. This graph shows that the rate of
-cancellation is generally lower for guests that have previously stayed
-there and didn’t cancel at least once.  
+As we can see, it seems as if new guests are more likely to cancel their
+bookings than a returning guest. This could be because returning guests
+know what they’re getting when they book the hotel since they have
+booked it before and if they were returning knew they were going to be
+satisfied. It could also have something to do with guests returning
+frequently for things such as business trips, which then they will be
+more frequent and consistent customers.
+
 The graph shows the relationships from customer type to cancellations.
 
 ``` r
@@ -513,7 +512,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 This graph demonstrates the cancellation rates for various customer
 types. As we can see, transient customers have the highest cancellation
@@ -548,7 +547,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 This graph shows the cancellation rate by market segment. As you can
 see, the Groups category for market segment has the highest cancellation
@@ -581,7 +580,7 @@ data %>%
     )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 As shown in the graph, the city hotel has a higher cancellation rate of
 about 41.7% whereas the resort hotel had 27.8% cancellation rate.
@@ -614,7 +613,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 This graph shows that as the number of special requests made gets
 higher, the rate of cancellation becomes lower.
@@ -653,7 +652,7 @@ data %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ``` r
 # 4. ADR by Month
@@ -712,7 +711,7 @@ ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
   theme_minimal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-2.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
 
 ``` r
 # Create labeled datasets
@@ -743,7 +742,7 @@ ggplot(combined_monthly_data, aes(x = arrival_date_month, y = value, fill = metr
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-3.png)<!-- -->
 
 ``` r
 #data <- data %>%
@@ -763,7 +762,7 @@ ggplot(filtered_data, aes(x = total_guests, y = adr)) +
   theme_minimal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-4.png)<!-- -->
 
 ``` r
 # Create a new column indicating presence of an agent
@@ -787,7 +786,7 @@ ggplot(filtered_data, aes(x = has_agent, y = adr, fill = has_agent)) +
   theme(legend.position = "none")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-5.png)<!-- -->
 
 ### What affects how many times bookings are changed?
 
@@ -808,7 +807,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 This chart shows the distribution of how many booking changes are made.
 As you can see, the majority of bookings don’t have any changes made to
@@ -841,7 +840,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 This shows cancellation rate by number of changes.
 
@@ -869,7 +868,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 As we can see the hotel type doesn’t seem to affect the number of
 booking changes very much. There is no significant data to be shown
@@ -896,7 +895,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 As shown in the graph there doesn’t seem to be too much change in
 booking changes with lead time. It stays less than .5 average booking
@@ -922,7 +921,7 @@ customer is a returning guest and the number of booking changes made.
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 As shown in the graph we see that repeated guests have a slightly higher
 chance of changing their bookings. However, both have a small average
@@ -955,7 +954,7 @@ ggplot(data, aes(x = customer_type, y = booking_changes, fill = customer_type)) 
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 This graph shows that transient-party customer types are more likely to
 make more booking changes than the others with an average number of
@@ -988,7 +987,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 As you can see, refundable deposit types have a higher average number of
 changes made to the bookings at 0.59 on average, wherease no deposit is
@@ -1020,7 +1019,7 @@ ggplot(country_counts, aes(x = reorder(country, -count), y = count, fill = count
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 This information would be useful for these hotels to know which
 countries to focus their advertising on. As shown in the graph, the top

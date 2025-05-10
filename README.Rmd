@@ -303,7 +303,7 @@ data %>%
   ) %>%
   filter(count > 20) %>%  # ignore values with less data entries
   ggplot(aes(x = as.factor(previous_cancellations), y = cancel_rate)) +
-  geom_bar(stat = "identity", fill = "#0073C2FF") +
+  geom_bar(stat = "identity") +
   geom_text(aes(label = scales::percent(cancel_rate, accuracy = 0.1)), 
             vjust = -0.5, size = 4) +
   scale_y_continuous(labels = scales::percent_format()) +
@@ -317,29 +317,25 @@ data %>%
     plot.title = element_text(hjust = 0.5)
   )
 
-data %>%
-  mutate(
-    repeated_guest = ifelse(is_repeated_guest == 1, "Repeated Guest", "New Guest")
-  ) %>%
-  group_by(previous_cancellations, repeated_guest) %>%
-  summarise(
-    count = n(),
-    cancel_rate = mean(is_canceled),
-    .groups = "drop"
-  ) %>%
-  filter(count > 10) %>%  # Filter out small groups for clarity
-  ggplot(aes(x = as.factor(previous_cancellations), y = cancel_rate, fill = repeated_guest)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.7), width = 0.6) +
-  geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)),
-            position = position_dodge(width = 0.7), vjust = -0.5, size = 4) +
-  scale_y_continuous(labels = percent_format()) +
+```
+  
+For example, 94.4% of customers that have previously cancelled once will cancel again on another booking. This graph shows that the rate of cancellation is generally lower for guests that have previously stayed there and didn't cancel at least once.  
+
+   
+Here we examine whether the fact that a guest is a returning guest or not affects the cancellation rate.  
+
+```{r, message=FALSE, warning=FALSE}
+
+ggplot(data, aes(x = factor(is_repeated_guest), y = is_canceled, fill = is_repeated_guest)) +
+  stat_summary(fun = mean, geom = "bar", width = 0.6) +
+  scale_x_discrete(labels = c("New Guest", "Returning Guest")) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(
-    title = "Cancellation Rate by Previous Cancellations and Guest Type",
-    x = "Number of Previous Cancellations",
-    y = "Cancellation Rate",
-    fill = "Guest Type"
+    title = "Cancellation Rate by Returning Guest Status",
+    x = "Guest Type",
+    y = "Cancellation Rate"
   ) +
-  theme_minimal()  + 
+  theme_minimal() +
   theme(
     plot.title = element_text(hjust = 0.5)
   )
@@ -347,7 +343,9 @@ data %>%
 
 ```
   
-For example, 94.4% of customers that have previously cancelled once will cancel again on another booking. This graph shows that the rate of cancellation is generally lower for guests that have previously stayed there and didn't cancel at least once.  
+As we can see, it seems as if new guests are more likely to cancel their bookings than a returning guest. This could be because returning guests know what they're getting when they book the hotel since they have booked it before and if they were returning knew they were going to be satisfied. It could also have something to do with guests returning frequently for things such as business trips, which then they will be more frequent and consistent customers.  
+  
+  
 The graph shows the relationships from customer type to cancellations.  
 ```{r, message=FALSE, warning=FALSE}
 
