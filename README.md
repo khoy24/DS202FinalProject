@@ -1322,3 +1322,46 @@ However, Portugal by FAR has the most bookings with almost 5,000, and
 the next largest is only around 1200 to 1300 bookings.
 
 ### Conclusion
+
+In conclusion, our analysis of the data on hotel bookings for a city and
+a resort hotel has led to many interesting discoveries. Despite feeling
+confident in our original hypotheses, there were still a few discoveries
+made that surprised us. Some variables did seem to have bigger impacts
+on the hotel bookings, though. The ones we think would be most notable
+to hotel businesses would be the time of year (month, year, etc), as
+well as customer type and market segment, ADR, and lead time. There are
+many other significant variables as well, these are just a few we found
+to be very valuable. The information provided in this report will
+benefit hotels looking to understand their customers’ behaviors by
+helping them absorb the data and provide better experiences to their
+customers while boosting the hotel’s profits and success. For example,
+now that we know that Portugal is the country of origin for most of
+their customers, this hotel could focus their advertisements around
+knowing what countries are the most interested in order to keep those
+customers, and maybe if they want to expand to more countries, they
+could increase advertising in the next few highest countries to start
+increasing worldwide business. Along with that, by examining the number
+of bookings per month the hotel business would know when they might be
+able to increase their rates, versus months when they might want to
+lower them to get more business. These are just a couple of examples of
+how this data will help hotel businesses. This data might also help
+customers, as by looking at these graphs they might be able to make
+estimates of when the hotels will be cheapest to book or when tourism is
+least crowded, etc., so they can better plan trips for themselves.
+
+In order to dive deeper into what factors impact hotel bookings and why,
+we would suggest further research be done on more hotels across the
+world and provide our analyses with that data. Not knowing what country
+or location these hotels were located in made some inferences difficult,
+as weather is a big factor in trips and we weren’t fully able to make
+solid guesses on reasons for things such as cancellations, frequency of
+bookings, or stay time. In the future we would also like to analyze data
+on some of the variables we did not touch on, such as room type,
+companies, reservation statuses, meal, etc. It also would be beneficial
+to have a variable recorded that represents how satisfied customers were
+with their stay. So, in future data sets collected, this should be a
+factor that is included. Finally, we would also like to be able to
+analyze more recent hotel booking data, post 2020. So, for a next step
+we propose that we collect data on more hotels from more recent years,
+and include a customer satisfaction variable and a hotel location
+variable.
