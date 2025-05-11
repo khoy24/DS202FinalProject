@@ -402,6 +402,7 @@ We will examine the following variables for how they affect
 cancellations:  
 - lead_time  
 - previous_cancellations  
+- returning guest  
 - customer_type  
 - market_segment  
 - hotel  
@@ -424,10 +425,13 @@ ggplot(data, aes(x = lead_time, fill = factor(is_canceled))) +
 
 Apart from the two outliers on the far right of the graph that did not
 cancel their bookings, the trend seems to be that the longer the lead
-time the higher the chance of cancellation.
+time the higher the chance of cancellation. This makes sense with what
+we would have assumed as when you book closer to the arrival date you
+have a better idea of what you need. In contrast, when you book farther
+out from the date things are more likely to change.
 
-The following graph demonstrates how previous_cancellations affects the
-chance of cancelling again.
+The following graph demonstrates how the number of previous
+cancellations affects the chance of cancelling again.
 
 ``` r
 data %>%
@@ -437,8 +441,8 @@ data %>%
     cancel_rate = mean(is_canceled),
     .groups = "drop"
   ) %>%
-  filter(count > 20) %>%  # ignore values with less data entries
-  ggplot(aes(x = as.factor(previous_cancellations), y = cancel_rate)) +
+  filter(count > 20) %>%  # ignore values with less data entries for viewing purposes, it was too large before
+  ggplot(aes(x = as.factor(previous_cancellations), y = cancel_rate, fill = previous_cancellations)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = scales::percent(cancel_rate, accuracy = 0.1)), 
             vjust = -0.5, size = 4) +
@@ -456,10 +460,19 @@ data %>%
 
 ![](README_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
+The graph demonstrates that once a person has 1 previous cancellation
+they are very likely to cancel again, then after that and they have 2 or
+more prior cancellations it drops to around 30% chance of cancellation,
+and goes up to 100% once it gets to around 24 previous cancellations.
 For example, 94.4% of customers that have previously cancelled once will
 cancel again on another booking. This graph shows that the rate of
 cancellation is generally lower for guests that have previously stayed
-there and didn’t cancel at least once.
+there and didn’t cancel at least once. While we expected the 0 previous
+cancellations to be around where it is for the cancellation rate, we
+assumed it would continually increase as the number of previous
+cancellations went up, but instead it spikes at 1 previous cancellation
+then stays relatively consistent until it gets to very large numbers of
+cancellations.
 
 Here we examine whether the fact that a guest is a returning guest or
 not affects the cancellation rate.
@@ -476,6 +489,7 @@ ggplot(data, aes(x = factor(is_repeated_guest), y = is_canceled, fill = is_repea
   ) +
   theme_minimal() +
   theme(
+        legend.position = "none",
     plot.title = element_text(hjust = 0.5)
   )
 ```
@@ -500,14 +514,14 @@ data %>%
     cancel_rate = mean(is_canceled),
     .groups = "drop"
   ) %>%
-  mutate(customer_type = reorder(customer_type, cancel_rate)) %>%  # reorder levels
+  mutate(customer_type = reorder(customer_type, cancel_rate)) %>%  # reorder to appear in increasing order
   ggplot(aes(x = customer_type, y = cancel_rate, fill = customer_type)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)), 
             vjust = -0.5, size = 4) +
   scale_y_continuous(labels = percent_format()) +
   labs(
-    title = "Cancellation Rate by Customer Type (Ordered Low to High)",
+    title = "Cancellation Rate by Customer Type",
     x = "Customer Type",
     y = "Cancellation Rate"
   ) +
@@ -522,7 +536,11 @@ data %>%
 This graph demonstrates the cancellation rates for various customer
 types. As we can see, transient customers have the highest cancellation
 rates with 40.7% cancellation rate. Group customers have the lowest with
-a 10.2% cancellation rate.
+a 10.2% cancellation rate. This follows what we would expect, as groups
+would have things planned in advance and be more strict about sticking
+to plans, while transient individuals have more freedom with their
+bookings and probably more flexibility to change their schedules and
+plans.
 
 This graph demonstrates the relationship between market segments and
 cancellation rates.
@@ -556,7 +574,19 @@ data %>%
 
 This graph shows the cancellation rate by market segment. As you can
 see, the Groups category for market segment has the highest cancellation
-rate with 61.1%, and complementary has the lowest with 13.1%.
+rate with 61.1%, and complementary has the lowest with 13.1%. This
+result may seem suprising since the preceding graph had groups as the
+lowest cancellation rate, however, upon doing further research we
+outline what the difference is between these designations.  
+In the terms of customer type, group represents an actual official group
+booking like coworkers, conference-goers, teams, etc., while market
+segment group includes groups of individuals as well as official groups
+such as those mentioned before. So, market segment ‘group’ probably
+includes some group, transient and transient party groups as well that
+don’t fit into the other market segments. After realizing this, we
+realized the data did make sense, as the other market segments such as
+corporate or complementary have more incentive to go and more
+restrictions that would not allow them to cancel.
 
 This next graph shows the cancellation rates in the different hotels
 (resort vs city).
@@ -588,7 +618,12 @@ data %>%
 ![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 As shown in the graph, the city hotel has a higher cancellation rate of
-about 41.7% whereas the resort hotel had 27.8% cancellation rate.
+about 41.7% whereas the resort hotel had 27.8% cancellation rate. We
+assume this would be because more people at the resort hotel are
+vacationing so their trips are based off the destination, whereas maybe
+the city hotel would have more bookings related to work / other nearby
+hotels that would allow or require people to change their plans more. A
+resort hotel’s location is generally the main attraction.
 
 This graph shows how the number of special requests correlates with the
 cancellation rate.
@@ -601,8 +636,8 @@ data %>%
     cancel_rate = mean(is_canceled),
     .groups = "drop"
   ) %>%
-  filter(count > 30) %>%  # limit to data with more than 30 occurrences, takes out some columns
-  ggplot(aes(x = as.factor(total_of_special_requests), y = cancel_rate)) +
+  filter(count > 30) %>%  # limit to data with more than 30 occurrences, takes out some columns to make it easier to read
+  ggplot(aes(x = as.factor(total_of_special_requests), y = cancel_rate, fill=total_of_special_requests)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)), 
             vjust = -0.5, size = 4) +
@@ -621,22 +656,26 @@ data %>%
 ![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 This graph shows that as the number of special requests made gets
-higher, the rate of cancellation becomes lower.
+higher, the rate of cancellation becomes lower. We originally assumed
+the opposite as we would assume those customers would be more picky, but
+with more special requests it does make sense that perhaps the customers
+would be more decisive about where they are staying and after making all
+the requests to accommodate themselves, less likely to cancel and
+probably more satisfied with their stay.
+
+Overall, it seemed as though all of these variables somewhat affected
+cancellation rate. However, we found that the results of the comparison
+with the number of previous cancellations was somewhat unhelpful and
+inconclusive. There was no significant pattern that we think would
+benefit hotels in any significant way to know. But, we believe the other
+variables, lead time, returning guest status, customer type, market
+segment, hotel type, and number of special requests would be helpful
+variables to pay attention to when determining likeliness of booking
+cancellation.
 
 ### How does the average daily rate affect bookings?
 
 ``` r
-# Load required libraries
-library(dplyr)
-library(ggplot2)
-library(tidyr)
-library(scales)
-
-# factor arrival date by month
-data$arrival_date_month <- factor(data$arrival_date_month, 
-                                   levels = c("January", "February", "March", "April", "May", "June", 
-                                              "July", "August", "September", "October", "November", "December"))
-
 # get monthly ADR
 monthly_adr <- data %>%
   group_by(arrival_date_year, arrival_date_month) %>%
@@ -652,9 +691,9 @@ data %>%
   group_by(adr_bin) %>%
   summarise(bookings = n()) %>%
   ggplot(aes(x = adr_bin, y = bookings)) +
-  geom_bar(stat = "identity", fill = "#1f77b4") +
+  geom_bar(stat = "identity") +
   labs(title = "Bookings by ADR Range", x = "ADR Bin", y = "Number of Bookings") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
@@ -680,7 +719,8 @@ ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
     x = "Lead Time (Days)",
     y = "Average Daily Rate (ADR)"
   ) +
-  theme_minimal()
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
@@ -710,9 +750,7 @@ monthly_bookings <- data %>%
 # bookings by month looking at years
 monthly_avg_bookings <- monthly_bookings %>%
   group_by(arrival_date_month) %>%
-  summarise(avg_bookings = mean(monthly_bookings, na.rm = TRUE)) %>%
-  arrange(factor(arrival_date_month, levels = c("January", "February", "March", "April", "May", "June", 
-                                                "July", "August", "September", "October", "November", "December")))
+  summarise(avg_bookings = mean(monthly_bookings, na.rm = TRUE)) 
 
 # Create labeled datasets
 monthly_avg_bookings$metric <- "Average Bookings"
@@ -734,13 +772,13 @@ combined_monthly_data$arrival_date_month <- factor(
 )
 
 # display both plots together
-ggplot(combined_monthly_data, aes(x = arrival_date_month, y = value, fill = metric)) +
+ggplot(combined_monthly_data, aes(x = arrival_date_month, y = value, fill = arrival_date_month)) +
   geom_bar(stat = "identity", show.legend = FALSE) +
-  scale_fill_manual(values = c("Average Bookings" = "#1f77b4", "Average ADR" = "#ff7f0e")) +
+  scale_fill_manual(values = monthcolors) +
   facet_wrap(~metric, scales = "free_y") +  # Side-by-side
   labs(title = "Monthly Comparison of Average Bookings and ADR",
        x = "Month", y = "Value") +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
@@ -764,14 +802,14 @@ filtered_data <- data %>%
   mutate(total_guests = adults + children + babies) %>%
   filter(adr <= 1000, total_guests > 0, total_guests < 20)
 
-# plot
 ggplot(filtered_data, aes(x = total_guests, y = adr)) +
-  geom_jitter(alpha = 0.2, color = "#1f77b4") +
-  geom_smooth(method = "lm", se = FALSE, color = "#ff7f0e") +
+  geom_jitter(alpha = 0.2) +
+  geom_smooth(method = "lm", se = FALSE, color = "red") +
   labs(title = "ADR vs. Number of Guests",
        x = "Total Number of Guests",
        y = "Average Daily Rate (ADR)") +
-  theme_minimal()
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
@@ -803,9 +841,8 @@ ggplot(filtered_data, aes(x = has_agent, y = adr, fill = has_agent)) +
     x = "Agent Status",
     y = "Average Daily Rate (ADR)"
   ) +
-  scale_fill_manual(values = c("Has Agent" = "#1f77b4", "No Agent" = "#ff7f0e")) +
   theme_minimal() +
-  theme(legend.position = "none")
+  theme(legend.position = "none", plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
@@ -833,14 +870,15 @@ guest_counts <- data %>%
 
 # Plot 
 ggplot(guest_counts, aes(x = factor(number_of_guests), y = booking_count)) +
-  geom_bar(stat = "identity", fill = "#1f77b4") +
+  geom_bar(stat = "identity", fill="blue") +
   geom_text(aes(label = booking_count), vjust = -0.5, size = 3) +
   labs(
     title = "Number of Bookings by Guest Count",
     x = "Number of Guests",
     y = "Number of Bookings"
   ) +
-  theme_minimal()
+  theme_minimal() + 
+  theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
@@ -870,9 +908,9 @@ group_cancellation <- data %>%
   )
 
 ggplot(group_cancellation, aes(x = factor(number_of_guests), y = cancellation_rate)) +
-  geom_col(fill = "#ff7f0e") +
+  geom_col(fill = "orange") +
   labs(title = "Cancellation Rate by Group Size", x = "Group Size (Number of Guests)", y = "Cancellation Rate") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
@@ -896,9 +934,9 @@ group_behavior <- data %>%
 
 # Plot
 ggplot(group_behavior, aes(x = factor(number_of_guests), y = avg_lead_time)) +
-  geom_col(fill = "#1f77b4") +
+  geom_col(fill = "purple") +
   labs(title = "Average Lead Time by Group Size", x = "Group Size", y = "Average Lead Time (days)") +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
@@ -924,8 +962,8 @@ data_grouped <- data_non_canceled %>%
 
 # Plot with point size representing frequency
 ggplot(data_grouped, aes(x = number_of_guests, y = required_car_parking_spaces, size = count)) +
-  geom_point(alpha = 0.6, color = "#1f77b4") +
-  geom_smooth(method = "lm", color = "#ff7f0e", se = FALSE, show.legend = FALSE) +
+  geom_point(alpha = 0.6, color = "blue") +
+  geom_smooth(method = "lm", color = "orange", se = FALSE, show.legend = FALSE) +
   scale_size_continuous(range = c(1, 8)) +
   labs(
     title = "Number of Guests vs Car Parking Spots",
@@ -934,7 +972,7 @@ ggplot(data_grouped, aes(x = number_of_guests, y = required_car_parking_spaces, 
     y = "Required Car Parking Spots",
     size = "Booking Count"
   ) +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
@@ -958,11 +996,11 @@ guest_parking_summary <- data_non_canceled %>%
     booking_count = n(),
     avg_parking_spots = mean(required_car_parking_spaces, na.rm = TRUE)
   ) %>%
-  filter(number_of_guests <= 20)  # limit to reasonable guest sizes
+  filter(number_of_guests <= 20) 
 
 # Plot
 ggplot(guest_parking_summary, aes(x = factor(number_of_guests), y = booking_count)) +
-  geom_bar(stat = "identity", fill = "#1f77b4") +
+  geom_bar(stat = "identity", fill = "blue") +
   geom_text(aes(label = paste0("Avg Spots: ", round(avg_parking_spots, 3))), 
             vjust = -0.5, size = 3) +
   labs(
@@ -971,7 +1009,7 @@ ggplot(guest_parking_summary, aes(x = factor(number_of_guests), y = booking_coun
     x = "Number of Guests",
     y = "Number of Bookings"
   ) +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5), plot.subtitle=element_text(hjust=0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
@@ -998,14 +1036,14 @@ filtered_data <- data %>%
 
 # Plot
 ggplot(filtered_data, aes(x = number_of_guests, y = total_nights)) +
-  geom_jitter(alpha = 0.2, color = "#1f77b4", width = 0.2) +
-  geom_smooth(method = "lm", se = FALSE, color = "#ff7f0e") +
+  geom_jitter(alpha = 0.2, color = "blue", width = 0.2) +
+  geom_smooth(method = "lm", se = FALSE, color = "orange") +
   labs(
     title = "Number of Guests vs Nights Stayed",
     x = "Number of Guests",
     y = "Total Nights Stayed"
   ) +
-  theme_minimal()
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
@@ -1028,9 +1066,9 @@ guest count and duration.
 ``` r
 data %>%
   count(booking_changes) %>%
-  filter(n > 50) %>%  # Filter out rare counts for clarity
+  filter(n > 50) %>%
   ggplot(aes(x = as.factor(booking_changes), y = n)) +
-  geom_bar(stat = "identity", fill = "#3182bd") +
+  geom_bar(stat = "identity", fill = "pink") +
   labs(
     title = "Distribution of Booking Changes",
     x = "Number of Changes",
@@ -1048,7 +1086,7 @@ This chart shows the distribution of how many booking changes are made.
 As you can see, the majority of bookings don’t have any changes made to
 them, and it drops from there.
 
-This is the cancellation rate by number of bookings.
+This is the cancellation rate by number of booking changes.
 
 ``` r
 data %>%
@@ -1060,7 +1098,7 @@ data %>%
   ) %>%
   filter(total > 50) %>%
   ggplot(aes(x = as.factor(booking_changes), y = cancel_rate)) +
-  geom_bar(stat = "identity", fill = "#de2d26") +
+  geom_bar(stat = "identity", fill = "orange") +
   geom_text(aes(label = scales::percent(cancel_rate, accuracy = 0.1)), 
             vjust = -0.5, size = 4) +
   scale_y_continuous(labels = scales::percent_format()) +
@@ -1077,7 +1115,12 @@ data %>%
 
 ![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
-This shows cancellation rate by number of changes.
+This shows cancellation rate by number of booking changes. As shown,
+there doesn’t seem to be much correlation between the number of booking
+changes and the cancellation rate. 0 booking changes has the highest
+rate of cancellation but 0 booking changes also has the highest number
+of occurrences out of the booking changes. Overall, the data from this
+graph isn’t significantly helpful in our analysis.
 
 This shows booking changes by hotel type.
 
@@ -1107,7 +1150,8 @@ data %>%
 
 As we can see the hotel type doesn’t seem to affect the number of
 booking changes very much. There is no significant data to be shown
-other than that they don’t seem to be very correlated.
+other than that they don’t seem to be very correlated as they seem
+relatively similarly.
 
 How does lead time correlate to booking changes? We hypothesize the
 longer lead time is the more booking changes will be made.
