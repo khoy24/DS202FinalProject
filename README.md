@@ -345,7 +345,10 @@ ggplot(cancellation_summary, aes(x = arrival_date_month, y = bookings, fill = is
 Looking at the chart the number of cancellations seems to follow the
 number of bookings. There doesn’t seem to be any super significant
 months or years where cancellations are more frequent in comparison to
-the number of bookings for that month.
+the number of bookings for that month. We found this a bit surprising as
+we thought winter months would have more cancellations to due unforeseen
+weather conditions, but we also do not know the weather patterns of the
+hotel locations so it is hard to say.
 
 Now we want to observe if the month/year affects the duration of a
 guest’s stay.
@@ -712,8 +715,8 @@ cleaned_data <- data %>%
   filter(!is.na(adr), !is.na(lead_time), adr <= 1000)
 
 ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
-  geom_point(alpha = 0.15) +  # Scatter plot with transparency for better visibility
-  geom_smooth(method = "lm", color = "red", se = FALSE) +  # Line of best fit without shaded confidence interval
+  geom_point(alpha = 0.15) +  
+  geom_smooth(method = "lm", color = "red", se = FALSE) +  
   labs(
     title = "Relationship Between Lead Time and Average Daily Rate (ADR)",
     x = "Lead Time (Days)",
@@ -775,7 +778,7 @@ combined_monthly_data$arrival_date_month <- factor(
 ggplot(combined_monthly_data, aes(x = arrival_date_month, y = value, fill = arrival_date_month)) +
   geom_bar(stat = "identity", show.legend = FALSE) +
   scale_fill_manual(values = monthcolors) +
-  facet_wrap(~metric, scales = "free_y") +  # Side-by-side
+  facet_wrap(~metric, scales = "free_y") +  # makes it side-by-side for comparison, personal preference
   labs(title = "Monthly Comparison of Average Bookings and ADR",
        x = "Month", y = "Value") +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),plot.title = element_text(hjust = 0.5))
@@ -896,7 +899,7 @@ data <- data %>%
   mutate(
     number_of_guests = adults + children + babies
   ) %>%
-  filter(!is.na(number_of_guests), number_of_guests > 0)  # Remove NA and 0 guests
+  filter(!is.na(number_of_guests), number_of_guests > 0)  
 
 # Find cancellation rate by group size
 group_cancellation <- data %>%
@@ -1063,6 +1066,15 @@ guest count and duration.
 
 ### What affects how many times bookings are changed?
 
+We are going to examine the relationship between number of booking
+changes made with:  
+- cancellation rate  
+- hotel type  
+- lead time  
+- returning guest status  
+- customer type  
+- deposit type
+
 ``` r
 data %>%
   count(booking_changes) %>%
@@ -1096,7 +1108,7 @@ data %>%
     cancel_rate = mean(is_canceled),
     .groups = "drop"
   ) %>%
-  filter(total > 50) %>%
+  filter(total > 10) %>%
   ggplot(aes(x = as.factor(booking_changes), y = cancel_rate)) +
   geom_bar(stat = "identity", fill = "orange") +
   geom_text(aes(label = scales::percent(cancel_rate, accuracy = 0.1)), 
@@ -1120,45 +1132,42 @@ there doesn’t seem to be much correlation between the number of booking
 changes and the cancellation rate. 0 booking changes has the highest
 rate of cancellation but 0 booking changes also has the highest number
 of occurrences out of the booking changes. Overall, the data from this
-graph isn’t significantly helpful in our analysis.
+graph isn’t significantly helpful in our analysis, but we originally
+thought that bookings with more changes made would be significantly
+higher for cancellation rates because in theory that customer would have
+plans that were not solid.
 
 This shows booking changes by hotel type.
 
 ``` r
-data %>%
-  group_by(hotel, booking_changes) %>%
-  summarise(n = n(), .groups = "drop") %>%
-  group_by(hotel) %>%
-  mutate(proportion = n / sum(n)) %>%
-  filter(n > 50) %>%  # limited number of booking changes to ones that occur more than 50 times 
-  ggplot(aes(x = as.factor(booking_changes), y = proportion, fill = hotel)) +
-  geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
-  scale_y_continuous(labels = percent_format()) +
+ggplot(data, aes(x = hotel, y = booking_changes, fill = hotel)) +
+  stat_summary(fun = mean, geom = "bar", width = 0.6, show.legend = FALSE) +
   labs(
-    title = "Proportion of Booking Changes by Hotel Type",
-    x = "Number of Booking Changes",
-    y = "Proportion of Bookings",
-    fill = "Hotel Type"
+    title = "Average Number of Booking Changes by Hotel Type",
+    x = "Hotel Type",
+    y = "Average Booking Changes"
   ) +
-  theme_minimal() + 
-  theme(
-    plot.title = element_text(hjust = 0.5)
-  )
+  theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
 ![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 As we can see the hotel type doesn’t seem to affect the number of
-booking changes very much. There is no significant data to be shown
-other than that they don’t seem to be very correlated as they seem
-relatively similarly.
+booking changes a lot, but the resort hotel does have a slightly higher
+average number of booking changes at about 0.3, whereas the city hotel
+has an average closer to 0.2 booking changes made. This is still
+relatively similar though. This could potentially be because resort
+hotels are more vacation-based so they probably have more groups going
+for fun that want booking changes to be made for convenience, as they
+don’t have to plan as strictly as groups like coworkers or teams that
+might book more frequently in cities.
 
 How does lead time correlate to booking changes? We hypothesize the
 longer lead time is the more booking changes will be made.
 
 ``` r
 data %>%
-  mutate(lead_time_bin = cut(lead_time, breaks = 20)) %>%  # bin
+  mutate(lead_time_bin = cut(lead_time, breaks = 20)) %>%  # this is like a bin, just had to do it a different way than normal
   group_by(lead_time_bin) %>%
   summarise(avg_booking_changes = mean(booking_changes), .groups = 'drop') %>%
   ggplot(aes(x = lead_time_bin, y = avg_booking_changes)) +
@@ -1177,7 +1186,7 @@ data %>%
 ![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 As shown in the graph there doesn’t seem to be too much change in
-booking changes with lead time. It stays less than .5 average booking
+booking changes with lead time. It stays less than 0.5 average booking
 changes until we get to the 700 to 738 day lead time range, then it
 significantly spikes and the average number of booking changes is 3.
 However, there are very few values in that range, so likely it was just
@@ -1238,7 +1247,10 @@ ggplot(data, aes(x = customer_type, y = booking_changes, fill = customer_type)) 
 This graph shows that transient-party customer types are more likely to
 make more booking changes than the others with an average number of
 booking changes of about 0.35, and contract customers make the least
-amount of booking changes with an average around 0.11.
+amount of booking changes with an average around 0.11. This makes sense
+as with more people in a party there is bound to be more changes that
+have to be made to accommodate for more schedules, and transient groups
+have the most flexibility.
 
 Now we investigate the relationship between deposit type and number of
 booking changes.
@@ -1269,9 +1281,11 @@ data %>%
 ![](README_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 As you can see, refundable deposit types have a higher average number of
-changes made to the bookings at 0.59 on average, wherease no deposit is
+changes made to the bookings at 0.59 on average, whereas no deposit is
 next at 0.25, and non refund has a very low number of changes on average
-at 0.01.
+at 0.01. This agrees with our original hypothesis, as refundable deposit
+types allow customers more booking freedom which would allow for them to
+make changes easier.
 
 ### Where are most visitors coming from?
 
