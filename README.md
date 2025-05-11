@@ -466,7 +466,7 @@ ggplot(data, aes(x = factor(is_repeated_guest), y = is_canceled, fill = is_repea
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   labs(
     title = "Cancellation Rate by Returning Guest Status",
-    x = "Guest Type",
+    x = "Guest Status",
     y = "Cancellation Rate"
   ) +
   theme_minimal() +
@@ -596,7 +596,7 @@ data %>%
     cancel_rate = mean(is_canceled),
     .groups = "drop"
   ) %>%
-  filter(count > 30) %>%  # Optional: remove rare categories for clarity
+  filter(count > 30) %>%  # limit to data with more than 30 occurrences, takes out some columns
   ggplot(aes(x = as.factor(total_of_special_requests), y = cancel_rate)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)), 
@@ -852,7 +852,7 @@ data %>%
   summarise(n = n(), .groups = "drop") %>%
   group_by(hotel) %>%
   mutate(proportion = n / sum(n)) %>%
-  filter(n > 50) %>%  # Optional: filter out rare booking change values
+  filter(n > 50) %>%  # limited number of booking changes to ones that occur more than 50 times 
   ggplot(aes(x = as.factor(booking_changes), y = proportion, fill = hotel)) +
   geom_bar(stat = "identity", position = position_dodge(width = 0.8), width = 0.7) +
   scale_y_continuous(labels = percent_format()) +
@@ -911,8 +911,8 @@ customer is a returning guest and the number of booking changes made.
   ggplot(data, aes(x = is_repeated_guest, y = booking_changes, fill = is_repeated_guest)) +
   stat_summary(fun = mean, geom = "bar", width = 0.6) +
   labs(
-    title = "Average Number of Booking Changes by Guest Type",
-    x = "Guest Type",
+    title = "Average Number of Booking Changes by Returning Guest",
+    x = "Guest Status",
     y = "Average Booking Changes"
   ) +
   theme_minimal() +
