@@ -8,8 +8,10 @@
 This report will demonstrate various relationships between variables
 surrounding hotel booking data. We will examine these variables in order
 to determine how they affect each other and hotel bookings. This data
-would be of interest to businesses like hotels, as they can adjust these
-factors to improve their profit and customer satisfaction.
+would be of interest to businesses like hotels and travel agencies, as
+they can adjust these factors to improve their profit and customer
+satisfaction. It could also be useful for customers to observe what
+factors might make their hotel bookings cheaper or more satisfactory.
 
 ### Questions we will address:
 
@@ -203,7 +205,7 @@ str(data)
 
 ``` r
 #Change variable types to be correct
-#Need to make year not be an int. Change that and the similar values to strings.
+#Need to make year not be an int. Change that and the similar values to strings. Also had to make is_repeated_guest a character so it wasn't treated numerically when graphing.
 data <- data %>%
   mutate(
     `arrival_date_year` = as.character(`arrival_date_year`),
@@ -214,12 +216,6 @@ data <- data %>%
 ```
 
 ### Results
-
-### Main - Curiosity
-
-Intense exploration and evidence of many trials and failures. Presents
-best ideas, rather than all ideas. Additional research from other
-sources used to help understand/explain findings.
 
 ### How does the time of year affect hotel bookings?
 
@@ -289,14 +285,14 @@ ggplot(data, aes(x = arrival_date_month, fill = hotel)) +
 
 ![](README_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
 
-As you can see, for the most part the two hotels follow relatively the
-same trend with the months with a few exceptions. We also notice that
-the city hotel has a lot more bookings in comparison to the resort
-hotel. The city hotel also has more variation in the number of bookings,
-while the resort hotels number of bookings seems more consistent.
+For the most part the two hotels follow relatively the same trend with
+the months with a few exceptions. We also notice that the city hotel has
+a lot more bookings in comparison to the resort hotel. The city hotel
+also has more variation in the number of bookings, while the resort
+hotels number of bookings seems more consistent.
 
-The following graph shows numbers of bookings by month and year in
-heatmap form.
+The following graph shows numbers of bookings by month and year in heat
+map form.
 
 ``` r
 heatmap_data <- data %>%
@@ -306,7 +302,7 @@ heatmap_data <- data %>%
 ggplot(heatmap_data, aes(x = arrival_date_month, y = arrival_date_year, fill = bookings)) +
   geom_tile(color = "white") +
   scale_fill_gradient(low = "#e0f3f8", high = "#d73027") +
-  labs(title = "Heatmap of Bookings by Month and Year",
+  labs(title = "Hotel Bookings by Month and Year",
        x = "Month", y = "Year", fill = "Bookings") +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
@@ -317,7 +313,9 @@ ggplot(heatmap_data, aes(x = arrival_date_month, y = arrival_date_year, fill = b
 
 As you can see in this graph, we can see that the bookings in generally
 have been increasing slightly over the years, and that they are
-generally higher in the spring and the fall.
+generally higher in the spring and the fall, as confirmed in our earlier
+graph. However, this gives us a better idea of how the trends are
+changing over the years.
 
 The following graph shows bookings cancelled vs bookings not cancelled
 by month and facetted by year.
@@ -332,7 +330,6 @@ cancellation_summary <- data %>%
 cancellation_summary$is_canceled <- factor(cancellation_summary$is_canceled,
                                            labels = c("Not Canceled", "Canceled"))
 
-# Plot
 ggplot(cancellation_summary, aes(x = arrival_date_month, y = bookings, fill = is_canceled)) +
   geom_bar(stat = "identity", position = "stack") +
   facet_wrap(~ arrival_date_year) +
@@ -354,12 +351,11 @@ Now we want to observe if the month/year affects the duration of a
 guest’s stay.
 
 ``` r
-#add variables for length of stay and total number of guests for later calculations
+#add variables for length of stay for the graph
 data <- data %>%
   mutate(
     length_of_stay = stays_in_weekend_nights + stays_in_week_nights,
   )
-
 
 avg_stay_per_booking <- data %>%
   group_by(arrival_date_year, arrival_date_month) %>%
@@ -373,7 +369,7 @@ ggplot(avg_stay_per_booking, aes(x = arrival_date_month, y = avg_stay, fill = ar
   geom_bar(stat = "identity") +
   facet_wrap(~arrival_date_year) +
   labs(title = "Average Length of Stay per Booking",
-       x = "Month", y = "Average Length of Stay") +
+       x = "Month", y = "Average Nights Stayed") +
   scale_fill_manual(values = monthcolors) +
   theme_minimal() +
   theme(
@@ -385,11 +381,20 @@ ggplot(avg_stay_per_booking, aes(x = arrival_date_month, y = avg_stay, fill = ar
 
 ![](README_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
-This graph shows the average length of stay for each booking. We
-calculate total nights stayed by adding weekend nights and week nights
-together. It demonstrates that the average length of stay for a booking
-is longer in summer months / hotter weather with it being around 3-4
-nights, with the colder months being more around 2-3 nights on average.
+This graph shows the average length of stay (in nights) for each
+booking. We calculate total nights stayed by adding weekend nights and
+week nights together. It demonstrates that the average length of stay
+for a booking is longer in summer months / hotter weather with it being
+around 3-4 nights, with the colder months being more around 2-3 nights
+on average.
+
+Overall, the important things to take away from these graphs are that
+the most bookings are made in the spring and fall months, with longer
+stays the warmer the weather is (summer months), the city hotel has more
+varying amounts of bookings made throughout the year in comparison to
+the resort hotel, cancellation rates don’t seem to be dramatically
+affected by season, and that as the years have gone by there have been
+more bookings made.
 
 ### What makes guests more likely to cancel their bookings?
 
