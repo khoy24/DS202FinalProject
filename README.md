@@ -627,12 +627,12 @@ library(ggplot2)
 library(tidyr)
 library(scales)
 
-# Convert arrival_date_month to ordered factor for correct month sorting
+# factor arrival date by month
 data$arrival_date_month <- factor(data$arrival_date_month, 
                                    levels = c("January", "February", "March", "April", "May", "June", 
                                               "July", "August", "September", "October", "November", "December"))
 
-# 1. ADR and Bookings by Month and Year
+# get monthly ADR
 monthly_adr <- data %>%
   group_by(arrival_date_year, arrival_date_month) %>%
   summarise(avg_adr = mean(adr, na.rm = TRUE),
@@ -640,7 +640,7 @@ monthly_adr <- data %>%
             cancellations = sum(is_canceled)) %>%
   ungroup()
 
-# 3. ADR vs. Booking Frequency (binned)
+# Find ADR by booking frequency
 data %>%
   filter(adr > 0 & adr < 500) %>%
   mutate(adr_bin = cut(adr, breaks = seq(0, 500, by = 25))) %>%
@@ -654,66 +654,61 @@ data %>%
 
 ![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
+This plot shows the distribution of bookings across different ADR
+(Average Daily Rate) ranges. Our goal was to identify the most commonly
+booked price ranges. The graph reveals that the majority of bookings
+fall between ADR values of 50 and 125. The distribution forms a
+bell-shaped curve, with a steeper decline on the lower ADR side and a
+more gradual drop-off as ADR increases. This suggests that while most
+guests book within a moderate price range, higher rates still receive a
+steady number of bookings, whereas lower rates are less frequent.
+
 ``` r
-# 4. ADR by Month
+cleaned_data <- data %>%
+  filter(!is.na(adr), !is.na(lead_time), adr <= 1000)
+
+ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
+  geom_point(alpha = 0.15) +  # Scatter plot with transparency for better visibility
+  geom_smooth(method = "lm", color = "red", se = FALSE) +  # Line of best fit without shaded confidence interval
+  labs(
+    title = "Relationship Between Lead Time and Average Daily Rate (ADR)",
+    x = "Lead Time (Days)",
+    y = "Average Daily Rate (ADR)"
+  ) +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+This graph explores the relationship between lead time (how far in
+advance a hotel is booked) and the Average Daily Rate (ADR). Our
+prediction was that booking earlier would result in a lower ADR. The
+linear regression line shows a negative trend, generally supporting our
+hypothesis, that the earlier a booking is made, the lower the ADR tends
+to be. Most bookings occur with a lead time under 300 days, and while
+bookings made more than 300 days in advance are less common, they tend
+to have ADRs within a relatively narrow range. In contrast, shorter lead
+times show a wider spread of ADR values.
+
+``` r
+# ADR by month
 monthly_adr_data <- data %>%
   group_by(arrival_date_month) %>%
   summarise(avg_adr = mean(adr, na.rm = TRUE), bookings = n())
 
-# Calculate average bookings by month, considering different years
+# Average bookings by month
 monthly_bookings <- data %>%
   group_by(arrival_date_month, arrival_date_year) %>%
   summarise(monthly_bookings = n()) %>%
   ungroup()
 
-# Calculate the average number of bookings for each month across all years
+# bookings by month looking at years
 monthly_avg_bookings <- monthly_bookings %>%
   group_by(arrival_date_month) %>%
   summarise(avg_bookings = mean(monthly_bookings, na.rm = TRUE)) %>%
   arrange(factor(arrival_date_month, levels = c("January", "February", "March", "April", "May", "June", 
                                                 "July", "August", "September", "October", "November", "December")))
 
-# Monthly comparison: avg_adr and avg_bookings by month and year
-monthly_comparison <- data %>%
-  group_by(arrival_date_year, arrival_date_month) %>%
-  summarise(
-    avg_adr = mean(adr, na.rm = TRUE),
-    avg_bookings = n()
-  ) %>%
-  ungroup()
-
-# Normalize values per year
-monthly_comparison <- monthly_comparison %>%
-  group_by(arrival_date_year) %>%
-  mutate(
-    normalized_bookings = rescale(avg_bookings),
-    normalized_adr = rescale(avg_adr)
-  ) %>%
-  ungroup()
-
-# Reshape to long format and rename metrics for clarity
-monthly_comparison_long <- monthly_comparison %>%
-  pivot_longer(cols = c(normalized_bookings, normalized_adr),
-               names_to = "metric", values_to = "value") %>%
-  mutate(metric = recode(metric,
-                         normalized_bookings = "Bookings",
-                         normalized_adr = "ADR"))
-
-
-cleaned_data <- data %>%
-  filter(!is.na(adr), !is.na(lead_time), adr <= 1000)
-
-ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
-  geom_point(alpha = 0.5) +  # Scatter plot with transparency for better visibility
-  labs(title = "Relationship Between Lead Time and Average Daily Rate (ADR)",
-       x = "Lead Time (Days)",
-       y = "Average Daily Rate (ADR)") +
-  theme_minimal()
-```
-
-![](README_files/figure-gfm/unnamed-chunk-14-2.png)<!-- -->
-
-``` r
 # Create labeled datasets
 monthly_avg_bookings$metric <- "Average Bookings"
 monthly_avg_bookings$value <- monthly_avg_bookings$avg_bookings
@@ -721,7 +716,7 @@ monthly_avg_bookings$value <- monthly_avg_bookings$avg_bookings
 monthly_adr_data$metric <- "Average ADR"
 monthly_adr_data$value <- monthly_adr_data$avg_adr
 
-# Combine into one data frame
+# Combine sets into data frame
 combined_monthly_data <- rbind(
   monthly_avg_bookings[, c("arrival_date_month", "metric", "value")],
   monthly_adr_data[, c("arrival_date_month", "metric", "value")]
@@ -733,6 +728,7 @@ combined_monthly_data$arrival_date_month <- factor(
   levels = levels(data$arrival_date_month)
 )
 
+# display both plots together
 ggplot(combined_monthly_data, aes(x = arrival_date_month, y = value, fill = metric)) +
   geom_bar(stat = "identity", show.legend = FALSE) +
   scale_fill_manual(values = c("Average Bookings" = "#1f77b4", "Average ADR" = "#ff7f0e")) +
@@ -742,30 +738,51 @@ ggplot(combined_monthly_data, aes(x = arrival_date_month, y = value, fill = metr
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-3.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+
+These two graphs were created to analyze the differences in bookings and
+ADR (Average Daily Rate) throughout the year. Our initial prediction was
+that booking volume would increase in the spring, peak during the
+summer, decline in the fall, and be lowest in the winter. Based on this
+expectation, we also assumed that ADR would follow a similar
+trend—rising during high-demand months when more people tend to go on
+vacation. While the ADR trend generally aligned with our prediction,
+peaking in the summer months, the bookings data did not. In July and
+August, months we expected to have the highest volume of bookings, we
+observed a significant drop. This contrast suggests that although prices
+were higher in those months, it did not directly correlate with an
+increase in bookings as we anticipated.
 
 ``` r
-#data <- data %>%
- # mutate(total_guests = adults + children + babies)
-
+# clean data and hide extreme outliers
 filtered_data <- data %>%
   mutate(total_guests = adults + children + babies) %>%
   filter(adr <= 1000, total_guests > 0, total_guests < 20)
 
-
+# plot
 ggplot(filtered_data, aes(x = total_guests, y = adr)) +
-  geom_jitter(alpha = 0.4, color = "#2c7fb8") +
-  geom_smooth(method = "lm", se = FALSE, color = "darkorange") +
+  geom_jitter(alpha = 0.2, color = "#1f77b4") +
+  geom_smooth(method = "lm", se = FALSE, color = "#ff7f0e") +
   labs(title = "ADR vs. Number of Guests",
        x = "Total Number of Guests",
        y = "Average Daily Rate (ADR)") +
   theme_minimal()
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-4.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+
+The purpose of this graph is to analyze how the Average Daily Rate (ADR)
+changes as the number of guests in a booking increases. For guest counts
+up to about 5, the ADR values appear to have a consistent range.
+However, as the number of guests increases beyond that, especially in
+higher guest group sizes, the ADR tends to vary more and generally leans
+lower, as indicated by the outliers. The linear regression line shows an
+upward trend, implying that ADR tends to increase with more guests.
+Still, this relationship is not strict because there are many
+exceptions, and the data shows higher variability at higher guest
+counts.
 
 ``` r
-# Create a new column indicating presence of an agent
 data <- data %>%
   mutate(has_agent = ifelse(is.na(agent), "No Agent", "Has Agent"))
 
@@ -786,7 +803,220 @@ ggplot(filtered_data, aes(x = has_agent, y = adr, fill = has_agent)) +
   theme(legend.position = "none")
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-5.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+
+This graph was created to explore how booking through an agent or travel
+agency affects the Average Daily Rate (ADR). Our initial assumption was
+that using an agent would result in a lower ADR, possibly due to
+negotiated discounts, package deals, or just having more experience.
+However, the data showed the opposite: bookings made through an agent
+tended to have a slightly higher ADR across all four quartiles.
+Additionally, agent bookings displayed a larger number of outliers,
+indicating greater variability in prices compared to direct bookings.
+
+### How does number of guests affect hotel bookings?
+
+``` r
+# find total number of guests
+data <- data %>%
+  mutate(number_of_guests = adults + children + babies)
+
+guest_counts <- data %>%
+  group_by(number_of_guests) %>%
+  summarise(booking_count = n()) %>%
+  ungroup()
+
+# Plot 
+ggplot(guest_counts, aes(x = factor(number_of_guests), y = booking_count)) +
+  geom_bar(stat = "identity", fill = "#1f77b4") +
+  geom_text(aes(label = booking_count), vjust = -0.5, size = 3) +
+  labs(
+    title = "Number of Bookings by Guest Count",
+    x = "Number of Guests",
+    y = "Number of Bookings"
+  ) +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+
+This graph illustrates the frequency of bookings based on the number of
+guests. The most common group size by far was 2 guests. Bookings with
+only 1 guest occurred significantly less, nearly four times less
+frequent. The frequency drops sharply for group sizes larger than 2,
+with bookings for more than 5 guests being relatively rare and appearing
+as nearly isolated cases.
+
+``` r
+# Find total number of guests
+data <- data %>%
+  mutate(
+    number_of_guests = adults + children + babies
+  ) %>%
+  filter(!is.na(number_of_guests), number_of_guests > 0)  # Remove NA and 0 guests
+
+# Find cancellation rate by group size
+group_cancellation <- data %>%
+  group_by(number_of_guests) %>%
+  summarise(
+    total = n(),
+    cancelled = sum(is_canceled),
+    cancellation_rate = cancelled / total
+  )
+
+ggplot(group_cancellation, aes(x = factor(number_of_guests), y = cancellation_rate)) +
+  geom_col(fill = "#ff7f0e") +
+  labs(title = "Cancellation Rate by Group Size", x = "Group Size (Number of Guests)", y = "Cancellation Rate") +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+
+The purpose of this graph was to examine how group size affects the
+cancellation rate. We hypothesized that larger groups would have higher
+cancellation rates due to the difficulty of coordinating multiple
+schedules. The data shows the following: bookings for groups of 5 or
+fewer had cancellation rates between 25% and 40%, while bookings for
+groups larger than 5 were canceled at least 50% of the time, and more
+commonly 100% of the time.
+
+``` r
+# Find average lead time and ADR by group size
+group_behavior <- data %>%
+  group_by(number_of_guests) %>%
+  summarise(
+    avg_lead_time = mean(lead_time, na.rm = TRUE),
+    avg_adr = mean(adr, na.rm = TRUE)
+  )
+
+# Plot
+ggplot(group_behavior, aes(x = factor(number_of_guests), y = avg_lead_time)) +
+  geom_col(fill = "#1f77b4") +
+  labs(title = "Average Lead Time by Group Size", x = "Group Size", y = "Average Lead Time (days)") +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+This graph was created to analyze the average lead time based on group
+size. We expected that larger groups would book further in advance to
+allow more time for coordination and planning. Interestingly, for
+smaller group sizes (up to 5), the trend was the opposit where average
+lead time decreased slightly as group size increased, with groups of 2
+booking the furthest in advance at just over 120 days. However, for
+groups larger than 5, the trend reversed: most of these group sizes had
+average lead times exceeding 300 days, with the exceptions being groups
+of 10 and 12.
+
+``` r
+data_non_canceled <- data %>%
+  filter(is_canceled == 0)
+
+# Group by guest count and parking spots and then find count frequency
+data_grouped <- data_non_canceled %>%
+  group_by(number_of_guests, required_car_parking_spaces) %>%
+  summarise(count = n(), .groups = 'drop')
+
+# Plot with point size representing frequency
+ggplot(data_grouped, aes(x = number_of_guests, y = required_car_parking_spaces, size = count)) +
+  geom_point(alpha = 0.6, color = "#1f77b4") +
+  geom_smooth(method = "lm", color = "#ff7f0e", se = FALSE, show.legend = FALSE) +
+  scale_size_continuous(range = c(1, 8)) +
+  labs(
+    title = "Number of Guests vs Car Parking Spots",
+    subtitle = "Point size reflects frequency of booking combinations",
+    x = "Number of Guests",
+    y = "Required Car Parking Spots",
+    size = "Booking Count"
+  ) +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+
+The purpose of this graph is to show the relationship between the number
+of required parking spots and the number of guests in a booking. We
+hypothesized that as the number of guests increased, the average number
+of required parking spots would also increase. To ensure accuracy, the
+data was filtered to exclude canceled bookings. However, our prediction
+was proven wrong by the results. The linear regression line shows a
+slight negative trend, indicating that higher guest counts do not
+correlate with more parking spots. In fact, we observed that most
+bookings required no parking spots at all, regardless of guest count.
+When parking was requested, it was typically limited to just one spot.
+
+``` r
+# Summarize count of bookings and average parking spots per number of guests
+guest_parking_summary <- data_non_canceled %>%
+  group_by(number_of_guests) %>%
+  summarise(
+    booking_count = n(),
+    avg_parking_spots = mean(required_car_parking_spaces, na.rm = TRUE)
+  ) %>%
+  filter(number_of_guests <= 20)  # limit to reasonable guest sizes
+
+# Plot
+ggplot(guest_parking_summary, aes(x = factor(number_of_guests), y = booking_count)) +
+  geom_bar(stat = "identity", fill = "#1f77b4") +
+  geom_text(aes(label = paste0("Avg Spots: ", round(avg_parking_spots, 3))), 
+            vjust = -0.5, size = 3) +
+  labs(
+    title = "Booking Count by Guest Group Size",
+    subtitle = "Labels above bars show average required car parking spots",
+    x = "Number of Guests",
+    y = "Number of Bookings"
+  ) +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+
+This graph again examines the relationship between the number of guests
+and the required parking spots, but this time it highlights the average
+number of parking spots for each guest count. From this visualization,
+we can see that the average number of parking spots generally increases
+with group size up to around four guests. After that point, the average
+begins to decline, and for group sizes larger than five, the need for
+parking spots drops significantly, with many of those bookings requiring
+none at all.
+
+``` r
+data <- data %>%
+  mutate(
+    number_of_guests = adults + children + babies,
+    total_nights = stays_in_weekend_nights + stays_in_week_nights
+  )
+
+# Filter for bookings where guests showed
+filtered_data <- data %>%
+  filter(number_of_guests > 0, number_of_guests <= 20, total_nights > 0)
+
+# Plot
+ggplot(filtered_data, aes(x = number_of_guests, y = total_nights)) +
+  geom_jitter(alpha = 0.2, color = "#1f77b4", width = 0.2) +
+  geom_smooth(method = "lm", se = FALSE, color = "#ff7f0e") +
+  labs(
+    title = "Number of Guests vs Nights Stayed",
+    x = "Number of Guests",
+    y = "Total Nights Stayed"
+  ) +
+  theme_minimal()
+```
+
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+
+This graph was created to explore how the number of guests affects the
+number of nights stayed per booking. The linear regression line shows a
+slight upward trend, suggesting that bookings with more guests may stay
+longer on average. However, it’s important to note that most bookings
+were made for one or two guests, with bookings for two guests being
+nearly four times more common than those for one. This imbalance in the
+data may skew the regression line. In fact, when looking more closely at
+the scatter, we can see a subtle downward trend in nights stayed as
+guest count increases beyond two. This suggests that while larger groups
+do occasionally stay longer, they may also book shorter and frequent
+stays, making it ore difficult to understand the relationship between
+guest count and duration.
 
 ### What affects how many times bookings are changed?
 
@@ -807,7 +1037,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 This chart shows the distribution of how many booking changes are made.
 As you can see, the majority of bookings don’t have any changes made to
@@ -840,7 +1070,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
 This shows cancellation rate by number of changes.
 
@@ -868,7 +1098,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 As we can see the hotel type doesn’t seem to affect the number of
 booking changes very much. There is no significant data to be shown
@@ -895,7 +1125,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 As shown in the graph there doesn’t seem to be too much change in
 booking changes with lead time. It stays less than .5 average booking
@@ -921,7 +1151,7 @@ customer is a returning guest and the number of booking changes made.
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 As shown in the graph we see that repeated guests have a slightly higher
 chance of changing their bookings. However, both have a small average
@@ -954,7 +1184,7 @@ ggplot(data, aes(x = customer_type, y = booking_changes, fill = customer_type)) 
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 This graph shows that transient-party customer types are more likely to
 make more booking changes than the others with an average number of
@@ -987,7 +1217,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 As you can see, refundable deposit types have a higher average number of
 changes made to the bookings at 0.59 on average, wherease no deposit is
@@ -1019,7 +1249,7 @@ ggplot(country_counts, aes(x = reorder(country, -count), y = count, fill = count
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 This information would be useful for these hotels to know which
 countries to focus their advertising on. As shown in the graph, the top
