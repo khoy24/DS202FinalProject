@@ -118,6 +118,7 @@ data <- data %>%
 ```
 
 ### Results  
+The following results aim to provide helpful data to answer our target questions.  
 
 ### How does the time of year affect hotel bookings?  
 ```{r, message=FALSE, warning=FALSE}
@@ -160,7 +161,7 @@ ggplot(data, aes(x = arrival_date_month, fill = arrival_date_month)) +
 ```
   
 This plot shows the number of hotel bookings per month (it shows the number of bookings made FOR that month, not what month the booking was made).  
-
+Originally, we had graphed it by average number of bookings per month, but realized our data was split with 2015 and 2017 only having half of those years, so we decided to also facet it by year, so that no month would have more data than the others.  
 Now we see that in 2015 the months with the most bookings were September-October, in 2016 it was October again, followed by the spring and summer months, and in 2017 it was May with the highest number of bookings, with its surrounding months following it. For the most part we still see that months with warmer. more mild weather, like the spring and fall seasons have more bookings.  
 
 Now we observe how how the month affects the bookings separately for the resort and city hotels.  
@@ -270,6 +271,7 @@ We will examine the following variables for how they affect cancellations:
 - previous_cancellations  
 - returning guest  
 - customer_type  
+- deposit_type  
 - market_segment  
 - hotel  
 - special_requests  
@@ -289,7 +291,7 @@ ggplot(data, aes(x = lead_time, fill = factor(is_canceled))) +
 
 ```
   
-Apart from the two outliers on the far right of the graph that did not cancel their bookings, the trend seems to be that the longer the lead time the higher the chance of cancellation. This makes sense with what we would have assumed as when you book closer to the arrival date you have a better idea of what you need. In contrast, when you book farther out from the date things are more likely to change.    
+Apart from the two outliers on the far right of the graph that did not cancel their bookings, the trend seems to be that the longer the lead time the higher the chance of cancellation. This makes sense with what we would have assumed as when you book closer to the arrival date you have a better idea of what you need. In contrast, when you book farther out from the date things are more likely to change. This data is backed by other websites such as smartness.com, and hotelminder.com for example, all list lead time as a big factor in cancellation rates.      
 
 The following graph demonstrates how the number of previous cancellations affects the chance of cancelling again.  
 ```{r, message=FALSE, warning=FALSE}
@@ -378,10 +380,69 @@ data %>%
     plot.title = element_text(hjust = 0.5)
   )
 
-
 ```
   
 This graph demonstrates the cancellation rates for various customer types. As we can see, transient customers have the highest cancellation rates with 40.7% cancellation rate. Group customers have the lowest with a 10.2% cancellation rate. This follows what we would expect, as groups would have things planned in advance and be more strict about sticking to plans, while transient individuals have more freedom with their bookings and probably more flexibility to change their schedules and plans.     
+
+This graph shows the relationship between deposit type and cancellation rates.  
+```{r, message=FALSE, warning=FALSE}
+data %>%
+  group_by(deposit_type) %>%
+  summarise(
+    total_bookings = n(),
+    cancel_rate = mean(is_canceled),
+    .groups = "drop"
+  ) %>%
+  mutate(deposit_type = reorder(deposit_type, cancel_rate)) %>%
+  ggplot(aes(x = deposit_type, y = cancel_rate, fill = deposit_type)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)), 
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = percent_format()) +
+  scale_fill_manual(values = cust_colors) +
+  labs(
+    title = "Cancellation Rate by Deposit Type",
+    x = "Deposit Type",
+    y = "Cancellation Rate"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
+
+```
+  
+This is not the data we expected to see. We hypothesized that non-refundable deposit types would lead to less cancellations as they have already paid for their stays so there would be more incentive to go. So in order to find out why this was, we decided to also investigate how lead time and deposit type are related. We figured this could have an impact with booking further out having less refundable options, as it would make sense for hotels to do this so that people do not book up hotels years or months in advance to save spots for themselves only to cancel them later.     
+
+```{r, message = FALSE, warning = FALSE}
+
+
+data %>%
+  group_by(deposit_type) %>%
+  summarise(
+    avg_lead_time = mean(lead_time, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(deposit_type = reorder(deposit_type, -avg_lead_time)) %>%
+  ggplot(aes(x = deposit_type, y = avg_lead_time, fill = deposit_type)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(avg_lead_time, 1)),
+            vjust = -0.5, size = 4) +
+  scale_fill_manual(values = cust_colors) +
+  labs(
+    title = "Average Lead Time by Deposit Type",
+    x = "Deposit Type",
+    y = "Average Lead Time (days)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+  
+Now that we have this graph, we can see it supported our hypothesis for why our previously unintuitive result did not seem to fit with our assumptions. Now that we know that non-refundable deposit types have higher lead times, the cancellation rate could be higher for non-refundable deposit types because they are booked further in advance, and people's plans have more time to change and cause them to cancel. So, we can assume that as lead time decreases, the hotels probably offer more refundable or no deposit options.   
+Along with that, according to mews.com, hotels might also make non-refundable deposit types cheaper in order to attract people to booking them, so perhaps if these reservations were cheaper people would not care as much about cancelling their reservations. However, a rate of cancellation around 99% is still extremely high, so we suspect there might be some human error in the data.     
 
 
 This graph demonstrates the relationship between market segments and cancellation rates. 
@@ -527,7 +588,7 @@ ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-This graph explores the relationship between lead time (how far in advance a hotel is booked) and the Average Daily Rate (ADR). Our prediction was that booking earlier would result in a lower ADR. The linear regression line shows a negative trend, generally supporting our hypothesis, that the earlier a booking is made, the lower the ADR tends to be. Most bookings occur with a lead time under 300 days, and while bookings made more than 300 days in advance are less common, they tend to have ADRs within a relatively narrow range. In contrast, shorter lead times show a wider spread of ADR values.
+This graph explores the relationship between lead time (how far in advance a hotel is booked) and the Average Daily Rate (ADR). Our prediction was that booking earlier would result in a lower ADR. The linear regression line shows a negative trend, generally supporting our hypothesis, that the earlier a booking is made, the lower the ADR tends to be. Most bookings occur with a lead time under 300 days, and while bookings made more than 300 days in advance are less common, they tend to have ADRs within a relatively narrow range. In contrast, shorter lead times show a wider spread of ADR values. This is also backed up by mylighthouse.com, as they describe "last-minute bookings might be higher to capitalize on urgent demand". 
 
 
 

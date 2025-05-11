@@ -220,6 +220,9 @@ data <- data %>%
 
 ### Results
 
+The following results aim to provide helpful data to answer our target
+questions.
+
 ### How does the time of year affect hotel bookings?
 
 ``` r
@@ -264,8 +267,11 @@ ggplot(data, aes(x = arrival_date_month, fill = arrival_date_month)) +
 
 This plot shows the number of hotel bookings per month (it shows the
 number of bookings made FOR that month, not what month the booking was
-made).
-
+made).  
+Originally, we had graphed it by average number of bookings per month,
+but realized our data was split with 2015 and 2017 only having half of
+those years, so we decided to also facet it by year, so that no month
+would have more data than the others.  
 Now we see that in 2015 the months with the most bookings were
 September-October, in 2016 it was October again, followed by the spring
 and summer months, and in 2017 it was May with the highest number of
@@ -412,6 +418,7 @@ cancellations:
 - previous_cancellations  
 - returning guest  
 - customer_type  
+- deposit_type  
 - market_segment  
 - hotel  
 - special_requests
@@ -437,7 +444,9 @@ cancel their bookings, the trend seems to be that the longer the lead
 time the higher the chance of cancellation. This makes sense with what
 we would have assumed as when you book closer to the arrival date you
 have a better idea of what you need. In contrast, when you book farther
-out from the date things are more likely to change.
+out from the date things are more likely to change. This data is backed
+by other websites such as smartness.com, and hotelminder.com for
+example, all list lead time as a big factor in cancellation rates.
 
 The following graph demonstrates how the number of previous
 cancellations affects the chance of cancelling again.
@@ -558,6 +567,89 @@ to plans, while transient individuals have more freedom with their
 bookings and probably more flexibility to change their schedules and
 plans.
 
+This graph shows the relationship between deposit type and cancellation
+rates.
+
+``` r
+data %>%
+  group_by(deposit_type) %>%
+  summarise(
+    total_bookings = n(),
+    cancel_rate = mean(is_canceled),
+    .groups = "drop"
+  ) %>%
+  mutate(deposit_type = reorder(deposit_type, cancel_rate)) %>%
+  ggplot(aes(x = deposit_type, y = cancel_rate, fill = deposit_type)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = percent(cancel_rate, accuracy = 0.1)), 
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = percent_format()) +
+  scale_fill_manual(values = cust_colors) +
+  labs(
+    title = "Cancellation Rate by Deposit Type",
+    x = "Deposit Type",
+    y = "Cancellation Rate"
+  ) +
+  theme_minimal() +
+  theme(legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+This is not the data we expected to see. We hypothesized that
+non-refundable deposit types would lead to less cancellations as they
+have already paid for their stays so there would be more incentive to
+go. So in order to find out why this was, we decided to also investigate
+how lead time and deposit type are related. We figured this could have
+an impact with booking further out having less refundable options, as it
+would make sense for hotels to do this so that people do not book up
+hotels years or months in advance to save spots for themselves only to
+cancel them later.
+
+``` r
+data %>%
+  group_by(deposit_type) %>%
+  summarise(
+    avg_lead_time = mean(lead_time, na.rm = TRUE),
+    .groups = "drop"
+  ) %>%
+  mutate(deposit_type = reorder(deposit_type, -avg_lead_time)) %>%
+  ggplot(aes(x = deposit_type, y = avg_lead_time, fill = deposit_type)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = round(avg_lead_time, 1)),
+            vjust = -0.5, size = 4) +
+  scale_fill_manual(values = cust_colors) +
+  labs(
+    title = "Average Lead Time by Deposit Type",
+    x = "Deposit Type",
+    y = "Average Lead Time (days)"
+  ) +
+  theme_minimal() +
+  theme(
+    legend.position = "none",
+    plot.title = element_text(hjust = 0.5)
+  )
+```
+
+![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+Now that we have this graph, we can see it supported our hypothesis for
+why our previously unintuitive result did not seem to fit with our
+assumptions. Now that we know that non-refundable deposit types have
+higher lead times, the cancellation rate could be higher for
+non-refundable deposit types because they are booked further in advance,
+and people’s plans have more time to change and cause them to cancel.
+So, we can assume that as lead time decreases, the hotels probably offer
+more refundable or no deposit options.  
+Along with that, according to mews.com, hotels might also make
+non-refundable deposit types cheaper in order to attract people to
+booking them, so perhaps if these reservations were cheaper people would
+not care as much about cancelling their reservations. However, a rate of
+cancellation around 99% is still extremely high, so we suspect there
+might be some human error in the data.
+
 This graph demonstrates the relationship between market segments and
 cancellation rates.
 
@@ -593,7 +685,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 This graph shows the cancellation rate by market segment. As you can
 see, the Groups category for market segment has the highest cancellation
@@ -639,7 +731,7 @@ data %>%
     )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 As shown in the graph, the city hotel has a higher cancellation rate of
 about 41.7% whereas the resort hotel had 27.8% cancellation rate. We
@@ -677,7 +769,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
 
 This graph shows that as the number of special requests made gets
 higher, the rate of cancellation becomes lower. We originally assumed
@@ -720,7 +812,7 @@ data %>%
   theme(axis.text.x = element_text(angle = 45, hjust = 1),plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
 This plot shows the distribution of bookings across different ADR
 (Average Daily Rate) ranges. Our goal was to identify the most commonly
@@ -747,7 +839,7 @@ ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
 
 This graph explores the relationship between lead time (how far in
 advance a hotel is booked) and the Average Daily Rate (ADR). Our
@@ -757,7 +849,9 @@ hypothesis, that the earlier a booking is made, the lower the ADR tends
 to be. Most bookings occur with a lead time under 300 days, and while
 bookings made more than 300 days in advance are less common, they tend
 to have ADRs within a relatively narrow range. In contrast, shorter lead
-times show a wider spread of ADR values.
+times show a wider spread of ADR values. This is also backed up by
+mylighthouse.com, as they describe “last-minute bookings might be higher
+to capitalize on urgent demand”.
 
 ``` r
 # ADR by month
@@ -805,7 +899,7 @@ ggplot(combined_monthly_data, aes(x = arrival_date_month, y = value, fill = arri
   theme(axis.text.x = element_text(angle = 45, hjust = 1),plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
 
 These two graphs were created to analyze the differences in bookings and
 ADR (Average Daily Rate) throughout the year. Our initial prediction was
@@ -836,7 +930,7 @@ ggplot(filtered_data, aes(x = total_guests, y = adr)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-17-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
 
 The purpose of this graph is to analyze how the Average Daily Rate (ADR)
 changes as the number of guests in a booking increases. For guest counts
@@ -870,7 +964,7 @@ ggplot(filtered_data, aes(x = has_agent, y = adr, fill = has_agent)) +
   theme(legend.position = "none", plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-18-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
 
 This graph was created to explore how booking through an agent or travel
 agency affects the Average Daily Rate (ADR). Our initial assumption was
@@ -906,7 +1000,7 @@ ggplot(guest_counts, aes(x = factor(number_of_guests), y = booking_count)) +
   theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-19-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
 
 This graph illustrates the frequency of bookings based on the number of
 guests. The most common group size by far was 2 guests. Bookings with
@@ -938,7 +1032,7 @@ ggplot(group_cancellation, aes(x = factor(number_of_guests), y = cancellation_ra
   theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
 
 The purpose of this graph was to examine how group size affects the
 cancellation rate. We hypothesized that larger groups would have higher
@@ -964,7 +1058,7 @@ ggplot(group_behavior, aes(x = factor(number_of_guests), y = avg_lead_time)) +
   theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
 
 This graph was created to analyze the average lead time based on group
 size. We expected that larger groups would book further in advance to
@@ -1000,7 +1094,7 @@ ggplot(data_grouped, aes(x = number_of_guests, y = required_car_parking_spaces, 
   theme_minimal() + theme(plot.title = element_text(hjust = 0.5), plot.subtitle = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
 
 The purpose of this graph is to show the relationship between the number
 of required parking spots and the number of guests in a booking. We
@@ -1037,7 +1131,7 @@ ggplot(guest_parking_summary, aes(x = factor(number_of_guests), y = booking_coun
   theme_minimal() + theme(plot.title = element_text(hjust = 0.5), plot.subtitle=element_text(hjust=0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
 
 This graph again examines the relationship between the number of guests
 and the required parking spots, but this time it highlights the average
@@ -1071,7 +1165,7 @@ ggplot(filtered_data, aes(x = number_of_guests, y = total_nights)) +
   theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
 
 This graph was created to explore how the number of guests affects the
 number of nights stayed per booking. The linear regression line shows a
@@ -1114,7 +1208,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 This chart shows the distribution of how many booking changes are made.
 As you can see, the majority of bookings don’t have any changes made to
@@ -1147,7 +1241,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-26-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 This shows cancellation rate by number of booking changes. As shown,
 there doesn’t seem to be much correlation between the number of booking
@@ -1173,7 +1267,7 @@ ggplot(data, aes(x = hotel, y = booking_changes, fill = hotel)) +
   theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
 
 As we can see the hotel type doesn’t seem to affect the number of
 booking changes a lot, but the resort hotel does have a slightly higher
@@ -1206,7 +1300,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
 
 As shown in the graph there doesn’t seem to be too much change in
 booking changes with lead time. It stays less than 0.5 average booking
@@ -1233,7 +1327,7 @@ customer is a returning guest and the number of booking changes made.
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-29-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
 
 As shown in the graph we see that repeated guests have a slightly higher
 chance of changing their bookings. However, both have a small average
@@ -1269,7 +1363,7 @@ ggplot(data, aes(x = customer_type, y = booking_changes, fill = customer_type)) 
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-30-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
 
 This graph shows that transient-party customer types are more likely to
 make more booking changes than the others with an average number of
@@ -1308,7 +1402,7 @@ data %>%
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-31-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-33-1.png)<!-- -->
 
 As you can see, refundable deposit types have a higher average number of
 changes made to the bookings at 0.59 on average, whereas no deposit is
@@ -1346,7 +1440,7 @@ ggplot(country_counts, aes(x = reorder(country, -count), y = count, fill = count
   )
 ```
 
-![](README_files/figure-gfm/unnamed-chunk-32-1.png)<!-- -->
+![](README_files/figure-gfm/unnamed-chunk-34-1.png)<!-- -->
 
 This information would be useful for these hotels to know which
 countries to focus their advertising on. As shown in the graph, the top
