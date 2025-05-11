@@ -117,6 +117,9 @@ This is a link to our dataset on Kaggle:
 
 ### Data Cleaning
 
+The data was pretty clean originally, but we did some checks just to
+make sure it was how we wanted it and changed some variable types.
+
 ``` r
 library(dplyr)
 library(ggplot2)
