@@ -281,7 +281,7 @@ ggplot(data, aes(x = arrival_date_month, fill = hotel)) +
   geom_bar(position = "dodge") +
   facet_wrap(~ arrival_date_year) +
   labs(title = "Monthly Bookings: Resort vs City Hotel", x = "Month", y = "Bookings") +
-   scale_fill_manual(values = c("City Hotel" = "#1d3370", "Resort Hotel" = "#feea43")) +
+   scale_fill_manual(values = c("City Hotel" = "#1d3370", "Resort Hotel" = "#feaa43")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(hjust = 0.5))
@@ -339,7 +339,7 @@ ggplot(cancellation_summary, aes(x = arrival_date_month, y = bookings, fill = is
   facet_wrap(~ arrival_date_year) +
   labs(title = "Hotel Booking Cancellations by Month and Year",
        x = "Arrival Month", y = "Number of Bookings", fill = "Status") +
-   scale_fill_manual(values = c("Not Canceled" = "#1d3370", "Canceled" = "#feea43")) +
+   scale_fill_manual(values = c("Not Canceled" = "#1d3370", "Canceled" = "#feaa43")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1),
         plot.title = element_text(hjust = 0.5))
@@ -423,7 +423,7 @@ ggplot(data, aes(x = lead_time, fill = factor(is_canceled))) +
   geom_histogram(position = "fill", bins = 50) +
   labs(title = "Cancellation Rate by Lead Time", x = "Lead Time (days)",
        y = "Proportion", fill = "Canceled") +
-   scale_fill_manual(values = c("0" = "#1d3370", "1" = "#feea43")) +
+   scale_fill_manual(values = c("0" = "#1d3370", "1" = "#feaa43")) +
   theme_minimal() + 
   theme(
     plot.title = element_text(hjust = 0.5)
@@ -492,7 +492,7 @@ ggplot(data, aes(x = factor(is_repeated_guest), y = is_canceled, fill = factor(i
   scale_x_discrete(labels = c("New Guest", "Returning Guest")) +
   scale_y_continuous(labels = scales::percent_format(accuracy = 1)) +
   scale_fill_manual(
-    values = c("0" = "#1d3370", "1" = "#feea43"),
+    values = c("0" = "#1d3370", "1" = "#feaa43"),
     labels = c("New Guest", "Returning Guest")
   ) +
   labs(
@@ -520,7 +520,7 @@ more frequent and consistent customers.
 The graph shows the relationships from customer type to cancellations.
 
 ``` r
-cust_colors <- colorRampPalette(c("#1d3370", "#feea43"))(4)
+cust_colors <- colorRampPalette(c("#1d3370", "#feaa43"))(4)
 
 data %>%
   group_by(customer_type) %>%
@@ -562,7 +562,7 @@ This graph demonstrates the relationship between market segments and
 cancellation rates.
 
 ``` r
-market_colors <- colorRampPalette(c("#1d3370", "#feea43"))(7)
+market_colors <- colorRampPalette(c("#1d3370", "#feaa43"))(7)
 
 data %>%
   filter(market_segment != "Undefined") %>%
@@ -632,7 +632,7 @@ data %>%
     x = "Hotel Type",
     y = "Cancellation Rate"
   ) +
-  scale_fill_manual(values = c("City Hotel" = "#1d3370", "Resort Hotel" = "#feea43")) +
+  scale_fill_manual(values = c("City Hotel" = "#1d3370", "Resort Hotel" = "#feaa43")) +
   theme_minimal() +
   theme(legend.position = "none",
     plot.title = element_text(hjust = 0.5)
@@ -737,7 +737,7 @@ cleaned_data <- data %>%
 
 ggplot(cleaned_data, aes(x = lead_time, y = adr)) +
   geom_point(alpha = 0.15, color="#1d3370") +  
-  geom_smooth(method = "lm", color = "#feea43", se = FALSE) +  
+  geom_smooth(method = "lm", color = "#feaa43", se = FALSE) +  
   labs(
     title = "Relationship Between Lead Time and Average Daily Rate (ADR)",
     x = "Lead Time (Days)",
@@ -828,7 +828,7 @@ filtered_data <- data %>%
 
 ggplot(filtered_data, aes(x = total_guests, y = adr)) +
   geom_jitter(alpha = 0.2, color="#1d3370") +
-  geom_smooth(method = "lm", se = FALSE, color = "#feea43") +
+  geom_smooth(method = "lm", se = FALSE, color = "#feaa43") +
   labs(title = "ADR vs. Number of Guests",
        x = "Total Number of Guests",
        y = "Average Daily Rate (ADR)") +
@@ -860,7 +860,7 @@ filtered_data <- data %>%
 # Box plot of ADR by agent status
 ggplot(filtered_data, aes(x = has_agent, y = adr, fill = has_agent)) +
   geom_boxplot(outlier.alpha = 0.2) +
-  scale_fill_manual(values = c("Has Agent" = "#1d3370", "No Agent" = "#feea43")) +
+  scale_fill_manual(values = c("Has Agent" = "#1d3370", "No Agent" = "#feaa43")) +
   labs(
     title = "ADR Comparison (ADR < 1000): Bookings With vs Without Agent",
     x = "Agent Status",
@@ -959,7 +959,7 @@ group_behavior <- data %>%
 
 # Plot
 ggplot(group_behavior, aes(x = factor(number_of_guests), y = avg_lead_time)) +
-  geom_col(fill = "#feea43") +
+  geom_col(fill = "#feaa43") +
   labs(title = "Average Lead Time by Group Size", x = "Group Size", y = "Average Lead Time (days)") +
   theme_minimal() + theme(plot.title = element_text(hjust = 0.5))
 ```
@@ -988,7 +988,7 @@ data_grouped <- data_non_canceled %>%
 # Plot with point size representing frequency
 ggplot(data_grouped, aes(x = number_of_guests, y = required_car_parking_spaces, size = count)) +
   geom_point(alpha = 0.6, color = "#1d3370") +
-  geom_smooth(method = "lm", color = "#feea43", se = FALSE, show.legend = FALSE) +
+  geom_smooth(method = "lm", color = "#feaa43", se = FALSE, show.legend = FALSE) +
   scale_size_continuous(range = c(1, 8)) +
   labs(
     title = "Number of Guests vs Car Parking Spots",
@@ -1062,7 +1062,7 @@ filtered_data <- data %>%
 # Plot
 ggplot(filtered_data, aes(x = number_of_guests, y = total_nights)) +
   geom_jitter(alpha = 0.2, color = "#1d3370", width = 0.2) +
-  geom_smooth(method = "lm", se = FALSE, color = "#feea43") +
+  geom_smooth(method = "lm", se = FALSE, color = "#feaa43") +
   labs(
     title = "Number of Guests vs Nights Stayed",
     x = "Number of Guests",
@@ -1132,7 +1132,7 @@ data %>%
   ) %>%
   filter(total > 10) %>%
   ggplot(aes(x = as.factor(booking_changes), y = cancel_rate)) +
-  geom_bar(stat = "identity", fill = "#feea43") +
+  geom_bar(stat = "identity", fill = "#feaa43") +
   geom_text(aes(label = scales::percent(cancel_rate, accuracy = 0.1)), 
             vjust = -0.5, size = 4) +
   scale_y_continuous(labels = scales::percent_format()) +
@@ -1164,7 +1164,7 @@ This shows booking changes by hotel type.
 ``` r
 ggplot(data, aes(x = hotel, y = booking_changes, fill = hotel)) +
   stat_summary(fun = mean, geom = "bar", width = 0.6, show.legend = FALSE) +
-  scale_fill_manual(values = c("City Hotel" = "#1d3370", "Resort Hotel" = "#feea43")) +
+  scale_fill_manual(values = c("City Hotel" = "#1d3370", "Resort Hotel" = "#feaa43")) +
   labs(
     title = "Average Number of Booking Changes by Hotel Type",
     x = "Hotel Type",
@@ -1226,7 +1226,7 @@ customer is a returning guest and the number of booking changes made.
     x = "Guest Status",
     y = "Average Booking Changes"
   ) +
-   scale_fill_manual(values = c("0" = "#1d3370", "1" = "#feea43")) +
+   scale_fill_manual(values = c("0" = "#1d3370", "1" = "#feaa43")) +
   theme_minimal() +
   theme(legend.position = "none",
     plot.title = element_text(hjust = 0.5)
@@ -1245,7 +1245,7 @@ The following graph shows customer type vs number of booking changes
 made.
 
 ``` r
-cust_colors <- colorRampPalette(c("#1d3370", "#feea43"))(4)
+cust_colors <- colorRampPalette(c("#1d3370", "#feaa43"))(4)
 
 # this reorders so that they go lowest to highest average num of booking changes
 data <- data %>%
@@ -1283,7 +1283,7 @@ Now we investigate the relationship between deposit type and number of
 booking changes.
 
 ``` r
-deposit_colors <- colorRampPalette(c("#1d3370", "#feea43"))(3)
+deposit_colors <- colorRampPalette(c("#1d3370", "#feaa43"))(3)
 
 data %>%
   group_by(deposit_type) %>%
@@ -1323,7 +1323,7 @@ To answer this question we observe the country of origin of bookings
 made.
 
 ``` r
-country_colors <- colorRampPalette(c("#1d3370", "#feea43"))(10)
+country_colors <- colorRampPalette(c("#1d3370", "#feaa43"))(10)
 
 country_counts <- data %>%
   group_by(country) %>%
